@@ -763,12 +763,21 @@ function updateMachineNodeVisual(machine, forceMetrics = false) {
         return;
     }
 
-    const totalOut = isDeposito
-        ? Object.keys(machine.bufferInput).reduce((acc, r) => acc + (machine.bufferInput[r] || 0), 0)
-        : def.outputs.reduce((acc, r) => acc + (machine.bufferOutput[r] || 0), 0);
-    const totalOutMax = Math.max(1, isDeposito
-        ? Object.keys(machine.bufferInputMax).reduce((acc, r) => acc + (machine.bufferInputMax[r] || 0), 0)
-        : def.outputs.reduce((acc, r) => acc + (machine.bufferOutputMax[r] || 0), 0));
+    // For deposito: show globalInventory totals. For machines with flow-only outputs: show input buffer.
+    const allOutputsFlow = !isDeposito && def.outputs.length > 0 && def.outputs.every(r => FLOW_RESOURCES.has(r));
+    let totalOut, totalOutMax;
+    if (isDeposito) {
+        // Depósito funnels into globalInventory — show that instead of transient bufferInput
+        totalOut = Object.values(gameState.globalInventory || {}).reduce((a, v) => a + v, 0);
+        totalOutMax = Math.max(1, Object.keys(machine.bufferInputMax).reduce((a, r) => a + (machine.bufferInputMax[r] || 0), 0));
+    } else if (allOutputsFlow) {
+        // Machines like Caldeira: output is vapor (flow) — show input buffer instead
+        totalOut = def.inputs.reduce((acc, r) => acc + (machine.bufferInput[r] || 0), 0);
+        totalOutMax = Math.max(1, def.inputs.reduce((acc, r) => acc + (machine.bufferInputMax[r] || 0), 0));
+    } else {
+        totalOut = def.outputs.reduce((acc, r) => acc + (machine.bufferOutput[r] || 0), 0);
+        totalOutMax = Math.max(1, def.outputs.reduce((acc, r) => acc + (machine.bufferOutputMax[r] || 0), 0));
+    }
     const bufferRatio = totalOut / totalOutMax;
     const bufFill = document.getElementById(`buf-${machine.id}`);
     if (bufFill && shouldRefreshMetrics) {
