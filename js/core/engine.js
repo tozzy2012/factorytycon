@@ -66,6 +66,7 @@ function ensureMachineShape(machine) {
     machine.totalProduced = machine.totalProduced || {};
     machine.uptime = machine.uptime || 0;
     machine.effHistory = machine.effHistory || [];
+    machine.workersAssigned = machine.workersAssigned ?? (def.workersMin || 0);
     machine.bottleneckTicks = machine.bottleneckTicks || 0;
 
     const tier = getTierDef(machine);
@@ -244,7 +245,18 @@ function updateSimulation() {
     gameState.machines.filter(m => !hasFlowInput(m)).forEach(machine => {
         const def = machineTypes[machine.type];
         const tier = getTierDef(machine);
-        const maxProd = tier.productionRate || 0;
+        const baseRate = tier.productionRate || 0;
+        // Worker factor: machines needing workers run slower without enough
+        const wMin = def.workersMin || 0;
+        const wMax = def.workersMax || wMin;
+        const wEffective = machine._effectiveWorkers ?? machine.workersAssigned ?? 0;
+        let workerFactor = 1;
+        if (wMin > 0) {
+            if (wEffective < wMin) workerFactor = 0;
+            else if (wMax > wMin) workerFactor = 0.5 + 0.5 * ((Math.min(wEffective, wMax) - wMin) / (wMax - wMin));
+        }
+        const maxProd = baseRate * workerFactor;
+        machine.workerFactor = workerFactor;
 
         if (machine.type === 'hub') {
             let moved = false;

@@ -38,6 +38,25 @@ function renderCityWorkspace() {
     const taxLbl = document.getElementById('city-tax-val');
     if (taxLbl) taxLbl.textContent = (city.policies?.taxRate || 0) + '%';
 
+    // Industry workers
+    const indW = getTotalIndustryWorkers();
+    _cityEl('city-indworkers-v').textContent = indW.assigned + ' alocados';
+    const indChip = document.getElementById('city-indworkers-chip');
+    if (indChip) indChip.className = 'city-stat-chip' + (city.trabalhadores.livres < 0 ? ' danger' : '');
+
+    // Migration log
+    const logEl = document.getElementById('city-migration-log');
+    if (logEl && city.migrationLog && city.migrationLog.length) {
+        const recent = city.migrationLog.slice(-5).reverse();
+        logEl.innerHTML = recent.map(e => {
+            const icon = e.count > 0 ? '🟢' : '🔴';
+            const sign = e.count > 0 ? '+' : '';
+            const ago = Math.round((Date.now() - e.time) / 1000);
+            const agoStr = ago < 60 ? ago + 's' : Math.round(ago/60) + 'min';
+            return '<div class="city-mig-entry">' + icon + ' <b>' + sign + e.count + '</b> — ' + e.reason + ' <span class="city-mig-time">' + agoStr + ' atrás</span></div>';
+        }).join('');
+    }
+
     // Buildings grid
     _renderCityGrid();
 }
@@ -164,6 +183,12 @@ function initCityWorkspaceUI() {
                 <span class="city-stat-chip-label">Pesquisa</span>
                 <span class="city-stat-chip-value" id="city-pesq-v">0 pts</span>
             </div>
+
+            <div class="city-stat-chip" id="city-indworkers-chip">
+                <span class="city-stat-chip-icon">🏭</span>
+                <span class="city-stat-chip-label">Ind.</span>
+                <span class="city-stat-chip-value" id="city-indworkers-v">0</span>
+            </div>
         </div>
 
         <!-- BODY -->
@@ -192,6 +217,11 @@ function initCityWorkspaceUI() {
                 <div>
                     <div class="city-section-label">Edifícios</div>
                     <div class="city-grid" id="city-grid"></div>
+                </div>
+
+                <div>
+                    <div class="city-section-label">Migração recente</div>
+                    <div class="city-migration-log" id="city-migration-log"></div>
                 </div>
 
                 <div>

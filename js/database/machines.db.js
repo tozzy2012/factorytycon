@@ -7,7 +7,9 @@ window.machineTypes = {
         era: 0,
         inputs: [],
         outputs: ['carvao_bruto'],
-        productionRate: 20,  // 20/s = 72.000/h
+        productionRate: 3,
+        workersMin: 1,
+        workersMax: 4,  // 20/s = 72.000/h
         inputRatios: {}
     },
     'caldeira_carvao': {
@@ -17,7 +19,11 @@ window.machineTypes = {
         era: 0,
         inputs: ['carvao_bruto', 'madeira_bruta', 'agua_bruta'],
         outputs: ['vapor'],
-        productionRate: 20,
+        productionRate: 3,
+        workersMin: 1,
+        workersMax: 2,
+        workersMin: 1,
+        workersMax: 2,
         inputRatios: { carvao_bruto: 0.4, madeira_bruta: 0.5, agua_bruta: 0.3 }, // aceita carvão OU madeira
         description: 'Queima carvão ou madeira e usa água para gerar vapor. Requer combustível e água para funcionar.'
     },
@@ -28,7 +34,7 @@ window.machineTypes = {
         era: 0,
         inputs: ['vapor'],
         outputs: ['energia_mecanica'],
-        productionRate: 12,
+        productionRate: 2.5,
         inputRatios: { vapor: 0.4 }, // 1 caldeira (20/s vapor) → 2.5 máquinas (20 / 2.5 / 12 ≈ 0.4... → usamos 0.4 arredondado)
         description: 'Converte vapor em força mecânica para mover as primeiras máquinas.'
     },
@@ -39,7 +45,9 @@ window.machineTypes = {
         era: 0,
         inputs: [],
         outputs: ['agua_bruta'],
-        productionRate: 10,
+        productionRate: 3,
+        workersMin: 1,
+        workersMax: 3,
         inputRatios: {},
         description: 'Bomba manual operada por trabalhadores. Não exige energia, mas é lenta.'
     },
@@ -50,7 +58,9 @@ window.machineTypes = {
         era: 0,
         inputs: [],
         outputs: ['madeira_bruta'],
-        productionRate: 15,
+        productionRate: 2.5,
+        workersMin: 1,
+        workersMax: 4,
         inputRatios: {},
         description: 'Extrai madeira das florestas locais.'
     },
@@ -61,7 +71,9 @@ window.machineTypes = {
         era: 0,
         inputs: ['madeira_bruta'],
         outputs: ['tabua_madeira'],
-        productionRate: 10,
+        productionRate: 1.5,
+        workersMin: 1,
+        workersMax: 3,
         inputRatios: { madeira_bruta: 1.5 },
         description: 'Corta toras em tábuas para construção e defesa.'
     },
@@ -72,7 +84,9 @@ window.machineTypes = {
         era: 0,
         inputs: ['minerio_fe', 'energia_mecanica'],
         outputs: ['minerio_frag'],
-        productionRate: 8,
+        productionRate: 1.5,
+        workersMin: 1,
+        workersMax: 2,
         inputRatios: { minerio_fe: 0.4, energia_mecanica: 0.2 }, // 1 mineradora (8/s) → 2.5 britadores; energia proporcional
         description: 'Tritura minério por força mecânica. Capacidade limitada.'
     },
@@ -83,7 +97,9 @@ window.machineTypes = {
         era: 0,
         inputs: ['energia_mecanica'],
         outputs: ['minerio_fe'],
-        productionRate: 8,
+        productionRate: 2,
+        workersMin: 1,
+        workersMax: 5,
         inputRatios: { energia_mecanica: 0.2 }, // leve consumo de energia mecânica
         description: 'Extração manual assistida por vapor. O início de tudo.'
     },
@@ -95,7 +111,9 @@ window.machineTypes = {
         era: 0,
         inputs: ['agua_bruta', 'energia_mecanica'],
         outputs: ['agua_tratada'],
-        productionRate: 10,
+        productionRate: 2,
+        workersMin: 1,
+        workersMax: 2,
         inputRatios: { agua_bruta: 0.4, energia_mecanica: 0.1 }, // 1 captação (15/s) → 2.5 filtros (15/2.5/10 = 0.4)
         description: 'Tratamento rudimentar via decantação e areia. Não utiliza eletricidade.'
     },

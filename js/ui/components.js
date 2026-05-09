@@ -480,6 +480,23 @@ function showInfoPanel(machine) {
             </div>
         </div>
 
+        ${(def.workersMin > 0) ? `
+        <div class="info-section"><h4>⚒️ Trabalhadores</h4>
+            <div class="info-card">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                    <span style="font-size:12px;color:var(--text-secondary);">Alocados: <b style="color:var(--text-primary);">${machine.workersAssigned || 0}</b> / ${def.workersMax || def.workersMin}</span>
+                    <span style="font-size:11px;color:${(machine.workerFactor || 0) >= 0.9 ? '#4ade80' : (machine.workerFactor || 0) > 0 ? '#facc15' : '#f87171'};">${Math.round((machine.workerFactor || 0) * 100)}% efic.</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <button class="btn btn-sm" onclick="setMachineWorkers(${machine.id}, ${(machine.workersAssigned || 0) - 1}); showInfoPanel(gameState.machines.find(m=>m.id===${machine.id}));" ${(machine.workersAssigned || 0) <= 0 ? 'disabled' : ''}>－</button>
+                    <input type="range" min="0" max="${def.workersMax || def.workersMin}" value="${machine.workersAssigned || 0}" style="flex:1;accent-color:#4ade80;" oninput="setMachineWorkers(${machine.id}, parseInt(this.value)); showInfoPanel(gameState.machines.find(m=>m.id===${machine.id}));">
+                    <button class="btn btn-sm" onclick="setMachineWorkers(${machine.id}, ${(machine.workersAssigned || 0) + 1}); showInfoPanel(gameState.machines.find(m=>m.id===${machine.id}));" ${(machine.workersAssigned || 0) >= (def.workersMax || def.workersMin) ? 'disabled' : ''}>＋</button>
+                </div>
+                <div style="font-size:10px;color:var(--text-tertiary);margin-top:6px;">Min: ${def.workersMin} · Sem trabalhadores = máquina parada</div>
+            </div>
+        </div>
+        ` : ''}
+
         <div class="info-section"><h4>Diagnóstico</h4><div class="info-card" style="font-size:12px;line-height:1.45;">${getMachineDiagnostic(machine)}</div></div>
 
         <div class="info-section"><h4>Histórico de eficiência</h4><div class="info-card">${renderEfficiencyHistory(machine)}</div></div>
