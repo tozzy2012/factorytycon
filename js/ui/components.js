@@ -488,9 +488,9 @@ function showInfoPanel(machine) {
                     <span style="font-size:11px;color:${(machine.workerFactor || 0) >= 0.9 ? '#4ade80' : (machine.workerFactor || 0) > 0 ? '#facc15' : '#f87171'};" id="workers-eff-${machine.id}">${Math.round((machine.workerFactor || 0) * 100)}% efic.</span>
                 </div>
                 <div style="display:flex;align-items:center;gap:8px;">
-                    <button class="btn btn-sm" id="workers-minus-${machine.id}" onclick="adjustWorkers(${machine.id}, -1)">－</button>
-                    <input type="range" id="workers-slider-${machine.id}" min="0" max="${def.workersMax || def.workersMin}" value="${machine.workersAssigned || 0}" style="flex:1;accent-color:#4ade80;" oninput="adjustWorkers(${machine.id}, null, parseInt(this.value))">
-                    <button class="btn btn-sm" id="workers-plus-${machine.id}" onclick="adjustWorkers(${machine.id}, 1)">＋</button>
+                    <button class="btn btn-sm" id="workers-minus-${machine.id}" data-action="workers-minus" data-machine-id="${machine.id}">－</button>
+                    <input type="range" id="workers-slider-${machine.id}" min="0" max="${def.workersMax || def.workersMin}" value="${machine.workersAssigned || 0}" style="flex:1;accent-color:#4ade80;" data-action="workers-slider" data-machine-id="${machine.id}">
+                    <button class="btn btn-sm" id="workers-plus-${machine.id}" data-action="workers-plus" data-machine-id="${machine.id}">＋</button>
                 </div>
                 <div style="font-size:10px;color:var(--text-tertiary);margin-top:6px;">Min: ${def.workersMin} · Sem trabalhadores = máquina parada</div>
             </div>
@@ -549,6 +549,32 @@ function showInfoPanel(machine) {
     `;
 
     panel.classList.add('open');
+
+    // ── Worker controls — event delegation (avoids inline onclick issues) ──
+    // Removed old listeners by replacing the panel body element
+    const body = document.getElementById('infoContent');
+    if (body) {
+        const newBody = body.cloneNode(true);  // clone removes all old listeners
+        body.parentNode.replaceChild(newBody, body);
+
+        newBody.addEventListener('click', (e) => {
+            const btn = e.target.closest('[data-action]');
+            if (!btn) return;
+            const action = btn.dataset.action;
+            const mid = parseInt(btn.dataset.machineId, 10);
+            if (isNaN(mid)) return;
+            if (action === 'workers-minus') adjustWorkers(mid, -1);
+            if (action === 'workers-plus')  adjustWorkers(mid,  1);
+        });
+
+        newBody.addEventListener('input', (e) => {
+            const el = e.target.closest('[data-action="workers-slider"]');
+            if (!el) return;
+            const mid = parseInt(el.dataset.machineId, 10);
+            if (isNaN(mid)) return;
+            adjustWorkers(mid, null, parseInt(el.value, 10));
+        });
+    }
 }
 
 function clearHubFilters(machineId) {
@@ -1011,9 +1037,11 @@ function importSave() {
         const reader = new FileReader();
         reader.onload = ev => {
             try {
+                const data = JSON.parse(ev.target.result);
                 localStorage.setItem('industrialPipeline_save', ev.target.result);
-                location.reload();
-            } catch(err) { alert('Save inválido'); }
+                if (window.applyLoadedState) { applyLoadedState(data); }
+                else { location.reload(); }
+            } catch(err) { alert('Save inválido: JSON malformado.'); }
         };
         reader.readAsText(file);
     };
@@ -1204,7 +1232,10 @@ function showMessage(text, type = 'success') {
 
 function updateGoldDisplay() {
     const el = document.getElementById('goldTopDisplay');
-    if (el) el.textContent = `💰 ${Math.floor(gameState.gold).toLocaleString('pt-BR')}`;
+    if (!el) return;
+    if (isNaN(gameState.gold)) gameState.gold = 0;
+    el.textContent = '💰 ' + Math.floor(gameState.gold).toLocaleString('pt-BR');
+}`;
 }
 
 function selectMachine(machine) {
@@ -1222,7 +1253,14 @@ function updateInventoryDock() {
     updateGlobalInventoryDock();
 }
 
-function updateSecurityBar() {}
+function updateSecurityBar() {
+    const dot = document.getElementById("securityDot");
+    const text = document.getElementById("securityText");
+    if (!dot || !text) return;
+    const level = gameState.securityLevel ?? 100;
+    dot.style.background = level >= 80 ? "#4ade80" : level >= 50 ? "#f59e0b" : "#f87171";
+    text.textContent = "🛡️ Segurança: " + Math.round(level) + "%";
+}
 
 async function init() {
     ensureMachineCatalog();
@@ -1412,7 +1450,10 @@ function toggleDock() {
 function resetView() {
     if (confirm('Tem certeza? Isso vai resetar todo o progresso.')) {
         localStorage.removeItem('industrialPipeline_save');
-        location.reload();
+        if (window.API && API.isLoggedIn()) {
+            API.deleteSave(1).catch(() => {});
+        }
+        hideTitleScreen(true);
     }
 }
 
@@ -1534,8 +1575,18 @@ function hideTitleScreen(newGame) {
         gameState.stats = { playTime: 0, firstSale: false };
         initCityState();
         // Limpar canvas
+        // Clear industry canvas: machine nodes (divs) + SVG paths
+        const world = document.getElementById('canvasWorld');
+        if (world) { world.querySelectorAll('.machine-node, .machine-delete-btn, .machine-overlay').forEach(e => e.remove()); }
         const svg = document.getElementById('canvasSvg');
-        if (svg) { svg.querySelectorAll('.machine-group, .connection-group').forEach(e => e.remove()); }
+        if (svg) { while (svg.firstChild) svg.removeChild(svg.firstChild); }
+
+        // Clear defense canvas
+        const worldDef = document.getElementById('canvasWorldDefense');
+        if (worldDef) { worldDef.querySelectorAll('.machine-node, .machine-delete-btn, .machine-overlay').forEach(e => e.remove()); }
+        const svgDef = document.getElementById('canvasSvgDefense');
+        if (svgDef) { while (svgDef.firstChild) svgDef.removeChild(svgDef.firstChild); }
+        closeInfoPanel();
         updateGoldDisplay();
         createToolbarChips();
         populateDock('industry');
@@ -1586,3 +1637,64 @@ function toggleAudio() {
 const _origPlaceMachine = typeof placeMachine === 'function' ? placeMachine : null;
 document.addEventListener('machine:placed', () => advanceTutorial('machine_placed'));
 document.addEventListener('connection:made', () => advanceTutorial('connection_made'));
+
+// ─── Backend integration helpers ───────────────────────────────────────────
+// Exposed for auth.js / AuthUI to call directly
+
+window.buildSaveData = function() {
+    return {
+        saveVersion: window.SAVE_VERSION || 2,
+        gold: gameState.gold,
+        machines: gameState.machines,
+        connections: gameState.connections,
+        nextId: gameState.nextId,
+        era: gameState.era,
+        eraProgress: gameState.eraProgress,
+        totalProducedGlobal: gameState.totalProducedGlobal,
+        globalInventory: gameState.globalInventory,
+        securityLevel: gameState.securityLevel,
+        lastSecurityTick: gameState.lastSecurityTick,
+        worldMap: gameState.worldMap,
+        pollutionLevel: gameState.pollutionLevel,
+        discoveryPoints: gameState.discoveryPoints,
+        city: gameState.city,
+        tutorial: gameState.tutorial,
+        stats: gameState.stats,
+    };
+};
+
+window.applyLoadedState = function(data) {
+    const noMachines = !data.machines || data.machines.length === 0;
+    gameState.gold = noMachines ? 100000 : (data.gold ?? 100000);
+    gameState.machines = (data.machines || []).map(m => { ensureMachineShape(m); return m; });
+    gameState.connections = (data.connections || []).map(c => ({ ...c, capacity: c.capacity || 1 }));
+    gameState.nextId = data.nextId || 1;
+    if (data.era !== undefined) gameState.era = data.era;
+    gameState.eraProgress = data.eraProgress ?? 0;
+    gameState.totalProducedGlobal = data.totalProducedGlobal || {};
+    gameState.globalInventory = data.globalInventory || {};
+    gameState.securityLevel = data.securityLevel ?? 100;
+    gameState.lastSecurityTick = data.lastSecurityTick || 0;
+    if (data.worldMap) gameState.worldMap = data.worldMap;
+    gameState.pollutionLevel = data.pollutionLevel ?? 0;
+    gameState.discoveryPoints = data.discoveryPoints ?? 100;
+    if (data.city) gameState.city = data.city;
+    if (data.tutorial) gameState.tutorial = data.tutorial;
+    if (data.stats) gameState.stats = data.stats;
+
+    // Clear and re-render canvas (industry + defense)
+    const _world = document.getElementById('canvasWorld');
+    if (_world) { _world.querySelectorAll('.machine-node, .machine-delete-btn, .machine-overlay').forEach(e => e.remove()); }
+    const _svg = document.getElementById('canvasSvg');
+    if (_svg) { while (_svg.firstChild) _svg.removeChild(_svg.firstChild); }
+    const _worldDef = document.getElementById('canvasWorldDefense');
+    if (_worldDef) { _worldDef.querySelectorAll('.machine-node, .machine-delete-btn, .machine-overlay').forEach(e => e.remove()); }
+    const _svgDef = document.getElementById('canvasSvgDefense');
+    if (_svgDef) { while (_svgDef.firstChild) _svgDef.removeChild(_svgDef.firstChild); }
+    gameState.machines.forEach(m => renderMachine(m));
+    gameState.connections.forEach(c => renderConnection(c));
+    updateGoldDisplay();
+    updateInventoryDock();
+    updateSecurityBar();
+    checkEraProgression();
+};

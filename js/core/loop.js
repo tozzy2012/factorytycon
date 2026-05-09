@@ -24,6 +24,7 @@ function renderParticles(alpha = 0, now = performance.now()) {
         const particleCount = ratio <= 0 ? 0 : ratio <= 0.4 ? 1 : ratio <= 0.8 ? 2 : 3;
         const speed = ratio <= 0.4 ? 3000 : ratio <= 0.8 ? 2000 : 1000;
         const length = path.getTotalLength();
+        if (length === 0) continue;  // Bug fix: skip zero-length paths (hidden/unrendered)
 
         for (let i = 0; i < 3; i++) {
             const particle = document.getElementById(`${connection.id}-particle-${i}`);
@@ -122,6 +123,7 @@ function onTick(tickNumber) {
         updateSimulationStatusIndicator();
         updateFactoryHealth();
         updatePlanetHud();
+        if (typeof updateSecurityBar === 'function') updateSecurityBar();
     }
 
     if (tickNumber % 100 === 0) {

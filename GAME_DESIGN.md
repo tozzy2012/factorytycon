@@ -601,3 +601,214 @@ O bottleneck intencional é: **mais casas → mais pop → mais workers → mais
 ---
 
 *Documento gerado automaticamente a partir do código-fonte em v0.004.5*
+
+---
+
+## 18. Backend Architecture
+
+> **Versão:** 1.0.0 · **Stack:** Node.js + Express + TypeScript + Drizzle ORM + SQLite
+
+### 18.1 Stack de Tecnologia
+
+| Camada | Tecnologia | Justificativa |
+|--------|-----------|---------------|
+| Runtime | Node.js 18 LTS | Disponível no LXC, maturidade |
+| Framework | Express 4 | Minimal, battle-tested |
+| Linguagem | TypeScript 5 | Type safety, DX superior |
+| ORM | Drizzle ORM | Type-safe, sem "magic", ideal para SQLite |
+| Database | SQLite (WAL mode) | Single-file, zero setup, perfeito para single-LXC |
+| Auth | JWT + bcryptjs | Access token 15min + refresh token 30 dias |
+| Validação | Zod | Schema-first, parse não validate |
+| Reverse Proxy | Nginx | Já instalado no LXC, `/api/` → porta 3001 |
+| Process Manager | systemd | Restart automático, logs via journald |
+
+### 18.2 Arquitetura em Camadas (backend-dev-guidelines)
+
+```
+Routes → Controllers → Services → Repositories → Database
+```
+
+```
+/jogo/server/
+├── src/
+│   ├── config/index.ts          # Zod env validation — única fonte de config
+│   ├── controllers/             # Coordina request/response (sem business logic)
+│   │   ├── auth.controller.ts
+│   │   ├── saves.controller.ts
+│   │   └── leaderboard.controller.ts
+│   ├── services/                # Toda a business logic aqui
+│   │   ├── auth.service.ts
+│   │   ├── saves.service.ts
+│   │   └── leaderboard.service.ts
+│   ├── repositories/            # Data access only — sem business logic
+│   │   ├── users.repository.ts
+│   │   ├── saves.repository.ts
+│   │   ├── leaderboard.repository.ts
+│   │   ├── achievements.repository.ts
+│   │   └── tokens.repository.ts
+│   ├── routes/                  # Zero business logic
+│   │   ├── auth.routes.ts
+│   │   ├── saves.routes.ts
+│   │   └── leaderboard.routes.ts
+│   ├── middleware/
+│   │   ├── auth.middleware.ts   # JWT verification
+│   │   └── error.middleware.ts  # Centralized error handling + asyncWrap
+│   ├── validators/              # Zod schemas para todos os inputs externos
+│   │   ├── auth.validators.ts
+│   │   └── saves.validators.ts
+│   ├── db/
+│   │   ├── schema.ts            # Drizzle schema (single source of truth)
+│   │   ├── index.ts             # DB connection + WAL pragmas
+│   │   └── migrate.ts           # Migration runner
+│   ├── types/index.ts           # Shared TypeScript types
+│   └── server.ts                # Entry point: Express app + listeners
+├── drizzle/migrations/          # SQL migration files (geradas automaticamente)
+├── data/game.db                 # SQLite database file
+├── dist/                        # TypeScript compilado
+├── drizzle.config.ts
+├── package.json
+└── tsconfig.json
+```
+
+### 18.3 Schema do Banco de Dados (database-design)
+
+#### Princípios aplicados:
+- PKs: `INTEGER AUTO_INCREMENT` (single-db, sem necessidade de UUID)
+- Timestamps: `TEXT` com ISO 8601 UTC (SQLite não tem `TIMESTAMPTZ` nativo)
+- Soft deletes: `deleted_at` em `users`
+- Denormalização controlada: `username` em `leaderboard` (performance de leitura)
+- Índices explícitos em todas as foreign keys e colunas de busca frequente
+
+#### Tabelas:
+
+| Tabela | Linhas esperadas | Propósito |
+|--------|-----------------|-----------|
+| `users` | Centenas | Contas de jogadores |
+| `game_saves` | ≤ 5 × users | 5 slots de save por usuário |
+| `leaderboard` | 1 × users | Score mais recente por jogador |
+| `achievements` | N × users | Conquistas desbloqueadas |
+| `refresh_tokens` | ≤ 5 × users | JWT refresh rotation com revogação |
+
+#### Relacionamentos:
+```
+users (1) ──< game_saves       (CASCADE DELETE)
+users (1) ──< leaderboard      (CASCADE DELETE)
+users (1) ──< achievements     (CASCADE DELETE, UNIQUE user+key)
+users (1) ──< refresh_tokens   (CASCADE DELETE)
+```
+
+### 18.4 Endpoints REST
+
+#### Auth
+| Método | Rota | Body | Proteção |
+|--------|------|------|---------|
+| `POST` | `/api/auth/register` | `{username, email, password}` | — |
+| `POST` | `/api/auth/login` | `{emailOrUsername, password}` | — |
+| `POST` | `/api/auth/refresh` | `{refreshToken}` | — |
+| `POST` | `/api/auth/logout` | `{refreshToken}` | — |
+| `GET` | `/api/auth/me` | — | JWT |
+
+#### Saves (5 slots por usuário)
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| `GET` | `/api/saves` | Lista saves (sem stateJson) |
+| `GET` | `/api/saves/:slot` | Carrega save completo (slot 1–5) |
+| `POST` | `/api/saves/:slot` | Salva/atualiza slot |
+| `DELETE` | `/api/saves/:slot` | Apaga slot |
+
+#### Leaderboard
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| `GET` | `/api/leaderboard?limit=100` | Top 100 jogadores (ouro) |
+| `GET` | `/api/leaderboard/me` | Ranking do jogador autenticado |
+
+#### Infra
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| `GET` | `/api/health` | Health check |
+
+### 18.5 Autenticação — Fluxo JWT
+
+```
+Login → Access Token (15min) + Refresh Token (30 dias, armazenado em DB)
+              │
+              ├── Access Token: enviado em Authorization: Bearer <token>
+              │                 curta duração, stateless
+              │
+              └── Refresh Token: opaco (hex 40 bytes), hash SHA-256 no DB
+                                 rotação a cada refresh (revoga o antigo)
+                                 revogação total em logout-all
+```
+
+### 18.6 Frontend — Integração
+
+**`js/api.js`** — API client singleton (`window.API`)
+- Fetch wrapper com retry automático via refresh token
+- Armazena tokens em `localStorage` (`ip_access_token`, `ip_refresh_token`)
+- Emite CustomEvents: `api:login`, `api:logout`
+
+**`js/auth.js`** — Auth UI (`window.AuthUI`)
+- Modal de login/registro injetado dinamicamente
+- Widget no top bar (usuário logado + botão de saves)
+- Save menu com 5 slots, preview de metadados
+- Inicializado com `AuthUI.init()` após o jogo carregar
+
+**Estratégia de save:**
+- Auto-save (TICK.AUTOSAVE_EVERY_TICKS = 200 ticks = 10s): salva em localStorage **e** backend slot 1
+- Slots 2–5: manuais via menu de saves
+- Offline: continua funcionando via localStorage (degradação graciosa)
+
+### 18.7 Infraestrutura no LXC 124
+
+```
+Internet → (Proxmox NAT) → LXC 124 (192.168.88.130:80)
+                                 │
+                            Nginx (porta 80)
+                            ├── /          → /jogo/ (static files)
+                            └── /api/      → 127.0.0.1:3001 (proxy_pass)
+                                                 │
+                                          Node.js API
+                                          (systemd: industrial-pipeline-api)
+                                                 │
+                                          /jogo/server/data/game.db (SQLite)
+```
+
+**Systemd service:** `industrial-pipeline-api.service`
+- `Restart=always` com `RestartSec=5`
+- Logs: `journalctl -u industrial-pipeline-api -f`
+
+### 18.8 Operações
+
+```bash
+# Status do serviço
+systemctl status industrial-pipeline-api
+
+# Logs em tempo real
+journalctl -u industrial-pipeline-api -f
+
+# Rebuild após alterações no backend
+cd /jogo/server && npm run build && systemctl restart industrial-pipeline-api
+
+# Novas migrações de DB
+cd /jogo/server && npm run db:generate && npm run db:migrate
+
+# Backup do banco
+cp /jogo/server/data/game.db /jogo/server/data/game.db.bak
+```
+
+---
+
+## 19. Bugs Corrigidos (v0.004.5 → v0.004.6)
+
+| # | Bug | Arquivo | Fix |
+|---|-----|---------|-----|
+| 1 | `updateSecurityBar()` era stub vazio — barra de segurança nunca atualizava | `components.js:1225` | Implementação completa com cor dinâmica |
+| 2 | `updateSecurityBar()` não chamada no loop de jogo | `loop.js` | Adicionada ao bloco `% 40 ticks` |
+| 3 | `importSave()` chamava `location.reload()` — perdia canvas | `components.js:1014` | Usa `applyLoadedState()` no-reload |
+| 4 | `resetView()` chamava `location.reload()` — perdia canvas | `components.js:1412` | Usa `hideTitleScreen(true)` no-reload |
+| 5 | Novo jogo não limpava canvas de defesa (`canvasSvgDefense`) | `components.js:1550` | Remove `.machine-group/.connection-group` de ambos SVGs |
+| 6 | Partículas de fluxo clusterizavam na origem em paths `length=0` | `loop.js:26` | Guard `if (length === 0) continue` |
+| 7 | `updateGoldDisplay()` não protegia contra `NaN` gold | `components.js:1207` | Self-heal `NaN → 0` antes de exibir |
+| 8 | `buildSaveData` / `applyLoadedState` não expostos globalmente | `components.js` | Exportados em `window.*` para `auth.js` |
+
+*Documento atualizado automaticamente — v0.004.6*
