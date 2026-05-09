@@ -582,6 +582,8 @@ function createMachine(type, x, y) {
     updateGoldDisplay();
     saveGameState();
     showMessage(`${machineDef.name} constuída!`, 'success');
+    document.dispatchEvent(new Event('machine:placed'));
+    if (window.AudioEngine) AudioEngine.play('place');
 }
 
 function setupEventListeners() {
@@ -947,6 +949,7 @@ function deleteMachine(machineId) {
 
 function saveGameState() {
     const saveData = {
+        saveVersion: SAVE_VERSION,
         gold: gameState.gold,
         machines: gameState.machines,
         connections: gameState.connections,
@@ -959,9 +962,43 @@ function saveGameState() {
         lastSecurityTick: gameState.lastSecurityTick,
         worldMap: gameState.worldMap,
         pollutionLevel: gameState.pollutionLevel,
-        discoveryPoints: gameState.discoveryPoints
+        discoveryPoints: gameState.discoveryPoints,
+        city: gameState.city,
+        tutorial: gameState.tutorial,
+        stats: gameState.stats,
     };
     localStorage.setItem('industrialPipeline_save', JSON.stringify(saveData));
+}
+
+function exportSave() {
+    const saveData = localStorage.getItem('industrialPipeline_save');
+    if (!saveData) return;
+    const blob = new Blob([saveData], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `factory-tycoon-save-${Date.now()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+function importSave() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = e => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = ev => {
+            try {
+                localStorage.setItem('industrialPipeline_save', ev.target.result);
+                location.reload();
+            } catch(err) { alert('Save inválido'); }
+        };
+        reader.readAsText(file);
+    };
+    input.click();
 }
 
 function loadGameState() {
@@ -1008,6 +1045,9 @@ function loadGameState() {
     if (data.worldMap) gameState.worldMap = data.worldMap;
     gameState.pollutionLevel = data.pollutionLevel ?? 0;
     gameState.discoveryPoints = data.discoveryPoints ?? 100;
+    if (data.city) gameState.city = data.city;
+    if (data.tutorial) gameState.tutorial = data.tutorial;
+    if (data.stats) gameState.stats = data.stats;
 
     // Migration: populate hub resourceFilters from existing connections (for saves
     // created before resourceFilters was introduced — filters would be empty []).
@@ -1171,6 +1211,7 @@ async function init() {
     ensureOverlays();
     initCanvasViewport();
     loadGameState();
+    initCityState();
     createToolbarChips();
     setupEventListeners();
     initWorldMap();
@@ -1181,6 +1222,7 @@ async function init() {
     updateSimulationStatusIndicator();
     refreshProductionRuntime();
     populateDock('industry');
+    showTitleScreen();
 }
 
 // Toggle sidebar de máquinas (Indústria)
@@ -1193,7 +1235,8 @@ window.WS_CONFIG = {
     industry: { title: 'Indústria', dock: 'machines' },
     defense: { title: 'Defesa', dock: 'defense' },
     planet: { title: 'Planeta', dock: 'planet' },
-    tech: { title: 'Tecnologia', dock: 'tech' }
+    tech: { title: 'Tecnologia', dock: 'tech' },
+    city: { title: 'Cidade', dock: 'city' },
 };
 
 let currentWorkspace = 'industry';
@@ -1246,6 +1289,11 @@ function switchWorkspace(name) {
         // Render immediately with fallback, then again after CSS transition
         setTimeout(() => { renderPlanetMap(); updatePlanetHud(); }, 0);
         setTimeout(() => { renderPlanetMap(); }, 350);
+    } else if (name === 'city') {
+        if (sidebarLogo) sidebarLogo.textContent = '🏙️ Cidade';
+        if (sidebarSubtitle) sidebarSubtitle.textContent = 'Gestão Urbana';
+        if (sidebar) sidebar.style.display = 'none';
+        setTimeout(() => { initCityWorkspaceUI(); renderCityWorkspace(); }, 0);
     } else {
         if (sidebarLogo) sidebarLogo.textContent = 'Industrial Pipeline';
         if (sidebarSubtitle) sidebarSubtitle.textContent = 'Estratégia Econômica';
@@ -1351,3 +1399,121 @@ function resetView() {
 
 // Iniciar o jogo
 init();
+
+// ═══ TUTORIAL SYSTEM (game-design skill: hook quickly + early wins) ═══
+const TUTORIAL_STEPS = [
+    { target: '.dock-chips', title: '👋 Bem-vindo!', text: 'Este é o <b>dock de máquinas</b>. Clique em <b>Mina de Carvão</b> para colocar a sua primeira máquina.', event: 'machine_placed' },
+    { target: '#canvas', title: '🔗 Conecte as máquinas', text: 'Agora <b>clique na Mina</b> e depois na <b>Caldeira</b> para conectá-las. O carvão vai fluir automaticamente.', event: 'connection_made' },
+    { target: '#goldTopDisplay', title: '💰 Venda seus produtos!', text: 'Coloque um <b>Mercado</b> e conecte a ele um produto final. O ouro aumenta automaticamente com as vendas!', event: 'first_sale' },
+];
+
+function showTutorialStep(step) {
+    if (!gameState.tutorial || gameState.tutorial.done) return;
+    const s = TUTORIAL_STEPS[step];
+    if (!s) { completeTutorial(); return; }
+
+    let overlay = document.getElementById('tutorial-overlay');
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'tutorial-overlay';
+        overlay.className = 'tutorial-overlay';
+        document.body.appendChild(overlay);
+    }
+    overlay.innerHTML = `
+        <div class="tutorial-card">
+            <div class="tutorial-step-indicator">${step + 1} / ${TUTORIAL_STEPS.length}</div>
+            <div class="tutorial-title">${s.title}</div>
+            <div class="tutorial-text">${s.text}</div>
+            <div class="tutorial-actions">
+                <button class="tutorial-skip" onclick="completeTutorial()">Pular tutorial</button>
+            </div>
+        </div>`;
+    overlay.style.display = 'flex';
+    gameState.tutorial.step = step;
+}
+
+function advanceTutorial(event) {
+    if (!gameState.tutorial || gameState.tutorial.done) return;
+    const current = TUTORIAL_STEPS[gameState.tutorial.step];
+    if (current && current.event === event) {
+        const next = gameState.tutorial.step + 1;
+        if (next >= TUTORIAL_STEPS.length) { completeTutorial(); return; }
+        gameState.tutorial.step = next;
+        showTutorialStep(next);
+    }
+}
+
+function completeTutorial() {
+    gameState.tutorial.done = true;
+    const overlay = document.getElementById('tutorial-overlay');
+    if (overlay) overlay.style.display = 'none';
+    saveGameState();
+}
+
+// ═══ EARLY WIN — Primeira venda (game-design: reward loop) ═══
+function triggerFirstSale() {
+    if (gameState.stats?.firstSale) return;
+    gameState.stats = gameState.stats || {};
+    gameState.stats.firstSale = true;
+    if (window.AudioEngine) AudioEngine.play('firstsale');
+    advanceTutorial('first_sale');
+
+    const cel = document.createElement('div');
+    cel.className = 'first-sale-celebration';
+    cel.innerHTML = `<div class="cel-emoji">🎉</div><div class="cel-title">Primeira Venda!</div><div class="cel-sub">Seu mercado está funcionando. Continue expandindo!</div>`;
+    document.body.appendChild(cel);
+    setTimeout(() => cel.classList.add('visible'), 50);
+    setTimeout(() => { cel.classList.remove('visible'); setTimeout(() => cel.remove(), 600); }, 3000);
+}
+
+// ═══ TITLE SCREEN ═══
+function showTitleScreen() {
+    const hasSave = !!localStorage.getItem('industrialPipeline_save');
+    let el = document.getElementById('title-screen');
+    if (!el) {
+        el = document.createElement('div');
+        el.id = 'title-screen';
+        el.className = 'title-screen';
+        document.body.appendChild(el);
+    }
+    el.innerHTML = `
+        <div class="title-content">
+            <div class="title-logo">⚙️</div>
+            <div class="title-name">Industrial Pipeline</div>
+            <div class="title-sub">Estratégia Econômica · Era do Vapor</div>
+            <div class="title-buttons">
+                ${hasSave ? '<button class="title-btn title-btn-primary" onclick="hideTitleScreen(false)">▶ Continuar</button>' : ''}
+                <button class="title-btn ${hasSave ? 'title-btn-secondary' : 'title-btn-primary'}" onclick="hideTitleScreen(true)">✦ Novo Jogo</button>
+            </div>
+            <div class="title-extras">
+                ${hasSave ? '<button class="title-link" onclick="exportSave()">⬇ Exportar save</button>' : ''}
+                <button class="title-link" onclick="importSave()">⬆ Importar save</button>
+            </div>
+            <div class="title-version">v0.004 · beta</div>
+        </div>`;
+    el.style.display = 'flex';
+}
+
+function hideTitleScreen(newGame) {
+    if (newGame) {
+        localStorage.removeItem('industrialPipeline_save');
+        location.reload();
+        return;
+    }
+    const el = document.getElementById('title-screen');
+    if (el) { el.classList.add('hiding'); setTimeout(() => el.remove(), 500); }
+    if (!gameState.tutorial?.done) showTutorialStep(0);
+}
+
+// ═══ AUDIO TOGGLE ═══
+function toggleAudio() {
+    if (!window.AudioEngine) return;
+    const enabled = AudioEngine.toggle();
+    const btn = document.getElementById('audioToggleBtn');
+    if (btn) btn.textContent = enabled ? '🔊' : '🔇';
+}
+
+// ═══ TUTORIAL HOOKS — máquina colocada e conexão feita ═══
+const _origPlaceMachine = typeof placeMachine === 'function' ? placeMachine : null;
+document.addEventListener('machine:placed', () => advanceTutorial('machine_placed'));
+document.addEventListener('connection:made', () => advanceTutorial('connection_made'));

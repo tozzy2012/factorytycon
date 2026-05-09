@@ -1,0 +1,13 @@
+{
+  "name": "Industrial Pipeline",
+  "short_name": "Factory",
+  "description": "Construa fábricas, gerencie sua cidade e domine eras industriais.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0d1117",
+  "theme_color": "#0d1117",
+  "orientation": "landscape",
+  "icons": [
+    { "src": "assets/svg/branding/logo.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

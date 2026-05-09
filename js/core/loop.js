@@ -1,3 +1,4 @@
+window.SPEED_MULTIPLIER = 1;
 window.TICK = {
     TPS: 20,
     MS_PER_TICK: 1000 / 20,
@@ -88,6 +89,8 @@ function onTick(tickNumber) {
     gameState.tickStats.totalTicks += 1;
 
     if (tickNumber % TICK.SIMULATION_EVERY_TICKS === 0) {
+        if (gameState.city) updateCity(TICK.MS_PER_TICK / 1000 * SPEED_MULTIPLIER);
+        gameState.stats.playTime = (gameState.stats.playTime || 0) + TICK.MS_PER_TICK / 1000;
         const start = performance.now();
         updateSimulation();
         const elapsed = performance.now() - start;
@@ -183,3 +186,23 @@ function refreshProductionRuntime() {
     }
 }
 
+
+// ═══ SPEED CONTROL (web-games + game-design skill) ═══
+function setGameSpeed(mult) {
+    SPEED_MULTIPLIER = mult;
+    TICK.MS_PER_TICK = 1000 / (TICK.TPS * mult);
+    document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
+    const btn = document.querySelector(`.speed-btn[data-speed="${mult}"]`);
+    if (btn) btn.classList.add('active');
+}
+
+// Pause quando aba perde foco (web-games skill: tab throttling)
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+        gameState.simulationRunning = false;
+    } else {
+        gameState.simulationRunning = true;
+        TICK.lastFrameTs = performance.now();
+        TICK.accumulatorMs = 0;
+    }
+});

@@ -719,6 +719,7 @@ function updateSimulation() {
             mercado.bufferInput[resource] = 0;
             soldSomething = true;
         });
+        if (soldSomething && typeof triggerFirstSale === 'function') triggerFirstSale();
         mercado.status = soldSomething ? 'active' : 'idle';
     });
 

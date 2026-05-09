@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Industrial Pipeline - Jogo de Estratégia Econômica</title>
+    <meta name="description" content="Construa fábricas, gerencie sua cidade e domine eras industriais.">
+    <meta name="theme-color" content="#0d1117">
+    <link rel="manifest" href="manifest.json">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -28,6 +31,10 @@
         <button class="nav-btn" data-ws="tech" onclick="switchWorkspace('tech')" title="Tecnologia">
             <span class="nav-icon">🔬</span>
             <span class="nav-label">Tech</span>
+        </button>
+        <button class="nav-btn" data-ws="city" onclick="switchWorkspace('city')" title="Cidade">
+            <span class="nav-icon">🏙️</span>
+            <span class="nav-label">Cid.</span>
         </button>
         <div class="nav-spacer"></div>
         <button class="nav-btn" onclick="resetView()" title="Reset">
@@ -57,7 +64,9 @@
                 <span id="securityText">🛡️ Segurança: 100%</span>
             </div>
             <div class="top-bar-actions">
-                <button class="top-btn" id="zoomOutBtn" title="Zoom out">－</button>
+                <div class="speed-controls"><button class="speed-btn active" data-speed="1" onclick="setGameSpeed(1)">1×</button><button class="speed-btn" data-speed="2" onclick="setGameSpeed(2)">2×</button><button class="speed-btn" data-speed="4" onclick="setGameSpeed(4)">4×</button></div>
+                <button class="top-btn" id="audioToggleBtn" onclick="toggleAudio()" title="Som">🔊</button>
+                                <button class="top-btn" id="zoomOutBtn" title="Zoom out">－</button>
                 <span class="top-btn zoom-label" id="zoomLabel">100%</span>
                 <button class="top-btn" id="zoomInBtn" title="Zoom in">＋</button>
                 <button class="top-btn" id="productionToggleBtn" onclick="toggleProductionPanel()">📊 Produção</button>
@@ -210,6 +219,9 @@
                     </div>
                 </div>
 
+                <!-- WORKSPACE: CIDADE -->
+                <div class="workspace workspace-city" id="ws-city"></div>
+
             </div><!-- /workspace-area -->
         </div><!-- /container sidebar + workspaces -->
 
@@ -247,6 +259,7 @@
 
 
     <!-- Scripts: State -> Database -> Core -> UI -> World -->
+    <script src="js/audio.js?v=4"></script>
     <script src="assets/svg/icons.js?v=2"></script>
     <script src="js/core/state.js?v=2"></script>
     <script src="js/database/machines.db.js?v=2"></script>
@@ -258,6 +271,14 @@
     <script src="js/ui/canvas.js?v=2"></script>
     <script src="js/ui/renderer.js?v=2"></script>
     <script src="js/world/planet.js?v=2"></script>
-    <script src="js/ui/components.js?v=2"></script>
+    <script src="js/ui/components.js?v=4"></script>
+    <script src="js/city/city.db.js?v=4"></script>
+    <script src="js/city/city.js?v=4"></script>
+    <script src="js/city/city-ui.js?v=4"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js').catch(() => {});
+        }
+    </script>
 </body>
 </html>

@@ -1,4 +1,7 @@
+window.SAVE_VERSION = 2;
+
 window.gameState = {
+    saveVersion: 2,
     gold: 100000,
     machines: [],
     connections: [],
@@ -20,6 +23,9 @@ window.gameState = {
     planetViewCenter: { x: 0, y: 0 },
     planetZoom: 1,
     selectedHex: null,
+    city: null,
+    tutorial: { done: false, step: 0 },
+    stats: { playTime: 0, firstSale: false },
     tickStats: {
         totalTicks: 0,
         simulationRuns: 0,
