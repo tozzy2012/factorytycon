@@ -1473,9 +1473,9 @@ function showTitleScreen() {
     if (!el) {
         el = document.createElement('div');
         el.id = 'title-screen';
-        el.className = 'title-screen';
         document.body.appendChild(el);
     }
+    el.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;background:radial-gradient(ellipse at 50% 35%,#0a1f0a 0%,#030a03 100%);display:flex;align-items:center;justify-content:center;';
     el.innerHTML = `
         <div class="title-content">
             <div class="title-logo">⚙️</div>
