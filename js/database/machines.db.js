@@ -546,7 +546,7 @@ window.machineTypes = {
         category: 'armazenamento',
         cost: 0,
         era: 0,
-        inputs: ['chapa_aco', 'vergalhao', 'cobre_fino', 'chapa_aluminio', 'componente_eletronico', 'explosivo_industrial', 'liga_titanio'],
+        inputs: ['madeira_bruta', 'tabua_madeira', 'chapa_aco', 'vergalhao', 'cobre_fino', 'chapa_aluminio', 'componente_eletronico', 'explosivo_industrial', 'liga_titanio'],
         outputs: [],
         productionRate: 0
     },

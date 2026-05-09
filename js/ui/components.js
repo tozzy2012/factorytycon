@@ -1053,7 +1053,7 @@ function loadGameState() {
     if (!saveData) return;
     const data = JSON.parse(saveData);
     const noMachines = !data.machines || data.machines.length === 0;
-    gameState.gold = noMachines ? 100000 : (data.gold ?? 100000);
+    gameState.gold = noMachines ? 1500 : (data.gold ?? 1500);
     gameState.machines = (data.machines || []).map(machine => {
         ensureMachineShape(machine);
         return machine;
@@ -1558,7 +1558,7 @@ function hideTitleScreen(newGame) {
     if (newGame) {
         localStorage.removeItem('industrialPipeline_save');
         // Reset state in-place (no reload)
-        gameState.gold = 100000;
+        gameState.gold = 1500;
         gameState.machines = [];
         gameState.connections = [];
         gameState.nextId = 1;
@@ -1591,6 +1591,7 @@ function hideTitleScreen(newGame) {
         createToolbarChips();
         populateDock('industry');
         switchWorkspace('industry');
+        setTimeout(createStarterChain, 50);
     }
     const el = document.getElementById('title-screen');
     if (el) {
@@ -1600,6 +1601,57 @@ function hideTitleScreen(newGame) {
         setTimeout(() => el.remove(), 520);
     }
     if (!gameState.tutorial?.done) showTutorialStep(0);
+}
+
+// ═══ STARTER CHAIN ═══
+function createStarterChain() {
+    const canvas = document.getElementById('canvas');
+    if (!canvas) return;
+    const W = canvas.offsetWidth || 800;
+    const H = canvas.offsetHeight || 600;
+    const cx = W / 2;
+    const cy = H / 2;
+    const positions = [
+        { type: 'lenhador',        x: cx - 240, y: cy },
+        { type: 'serraria_manual', x: cx,        y: cy },
+        { type: 'mercado',         x: cx + 240,  y: cy },
+    ];
+    const placed = [];
+    for (const { type, x, y } of positions) {
+        const def = machineTypes[type];
+        if (!def) continue;
+        const machine = {
+            id: gameState.nextId++,
+            type, x, y,
+            tier: 0, status: "stopped",
+            efficiency: 0, production: 0,
+            bufferInput: {}, bufferOutput: {},
+            bufferInputMax: {}, bufferOutputMax: {},
+            inputFlow: {}, outputFlow: {},
+            totalProduced: {}, uptime: 0, effHistory: []
+        };
+        if (def.workersMin > 0) machine.workersAssigned = def.workersMin;
+        ensureMachineShape(machine);
+        gameState.machines.push(machine);
+        renderMachine(machine);
+        placed.push(machine);
+    }
+    if (placed.length === 3) {
+        [[placed[0], placed[1]], [placed[1], placed[2]]].forEach(([from, to]) => {
+            const resource = machineTypes[from.type].outputs[0];
+            const connection = {
+                id: "conn-starter-" + from.id + "-" + to.id,
+                from: from.id, to: to.id,
+                resource, capacity: 10,
+                fromPortSide: null, toPortSide: null
+            };
+            gameState.connections.push(connection);
+            gameState.resourceFlow[connection.id] = 0;
+            renderConnection(connection);
+        });
+    }
+    updateGoldDisplay();
+    showMessage("Cadeia inicial pronta! Lenhador → Serraria → Mercado já conectados.", "success");
 }
 
 // ═══ WORKER CONTROLS ═══
@@ -1665,7 +1717,7 @@ window.buildSaveData = function() {
 
 window.applyLoadedState = function(data) {
     const noMachines = !data.machines || data.machines.length === 0;
-    gameState.gold = noMachines ? 100000 : (data.gold ?? 100000);
+    gameState.gold = noMachines ? 1500 : (data.gold ?? 1500);
     gameState.machines = (data.machines || []).map(m => { ensureMachineShape(m); return m; });
     gameState.connections = (data.connections || []).map(c => ({ ...c, capacity: c.capacity || 1 }));
     gameState.nextId = data.nextId || 1;

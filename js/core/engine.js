@@ -724,14 +724,20 @@ function updateSimulation() {
     gameState.machines.filter(m => m.type === 'mercado').forEach(mercado => {
         const def = machineTypes.mercado;
         let soldSomething = false;
+        let totalEarned = 0;
         def.inputs.forEach(resource => {
             const qty = mercado.bufferInput[resource] || 0;
             if (qty <= 0) return;
-            gameState.gold += qty * (marketPrices[resource] || 0);
+            const earned = qty * (marketPrices[resource] || 0);
+            gameState.gold += earned;
+            totalEarned += earned;
             mercado.bufferInput[resource] = 0;
             soldSomething = true;
         });
-        if (soldSomething && typeof triggerFirstSale === 'function') triggerFirstSale();
+        if (soldSomething) {
+            if (typeof triggerFirstSale === 'function') triggerFirstSale();
+            if (totalEarned > 0) spawnGoldFloat(mercado, totalEarned);
+        }
         mercado.status = soldSomething ? 'active' : 'idle';
     });
 
@@ -772,4 +778,28 @@ function updateSimulation() {
     updateGoldDisplay();
     checkEraProgression();
 }
-
+function spawnGoldFloat(mercado, amount) {
+    // Find the DOM node of the mercado machine to anchor the float
+    const node = document.getElementById("machine-" + mercado.id);
+    let x, y;
+    if (node) {
+        const rect = node.getBoundingClientRect();
+        x = rect.left + rect.width / 2;
+        y = rect.top;
+    } else {
+        // Fallback: top-right near gold display
+        const goldEl = document.getElementById('goldTopDisplay');
+        if (goldEl) {
+            const r = goldEl.getBoundingClientRect();
+            x = r.left + r.width / 2;
+            y = r.bottom + 8;
+        } else { return; }
+    }
+    const label = document.createElement('div');
+    label.className = 'gold-float-label';
+    label.textContent = '+' + Math.round(amount).toLocaleString('pt-BR') + ' 💰';
+    label.style.left = (x - 30) + 'px';
+    label.style.top = y + 'px';
+    document.body.appendChild(label);
+    label.addEventListener('animationend', () => label.remove());
+}

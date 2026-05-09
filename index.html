@@ -64,6 +64,19 @@
                     style="width:8px;height:8px;border-radius:999px;background:#4ade80;flex-shrink:0;"></span>
                 <span id="securityText">🛡️ Segurança: 100%</span>
             </div>
+            <!-- F: Era progress bar -->
+            <div id="eraBarWrap" style="display:flex;align-items:center;gap:6px;padding:4px 12px;border:1px solid var(--border-primary);border-radius:999px;font-size:11px;color:var(--text-secondary);">
+                <span id="eraBarLabel" style="white-space:nowrap;">Era 0</span>
+                <div style="width:80px;height:6px;background:rgba(255,255,255,0.1);border-radius:3px;overflow:hidden;">
+                    <div id="eraBarFill" style="height:100%;width:0%;background:var(--accent-green);border-radius:3px;transition:width 0.4s ease;"></div>
+                </div>
+                <span id="eraBarPct" style="color:var(--accent-gold);font-size:10px;">0%</span>
+            </div>
+            <!-- E: Idle workers -->
+            <div id="idleWorkersWrap" style="display:flex;align-items:center;gap:6px;padding:4px 12px;border:1px solid var(--border-primary);border-radius:999px;font-size:11px;color:var(--text-secondary);">
+                <span>👷</span>
+                <span id="idleWorkersText">0 ociosos</span>
+            </div>
             <div class="top-bar-actions">
                 <div class="speed-controls"><button class="speed-btn active" data-speed="1" onclick="setGameSpeed(1)">1×</button><button class="speed-btn" data-speed="2" onclick="setGameSpeed(2)">2×</button><button class="speed-btn" data-speed="4" onclick="setGameSpeed(4)">4×</button></div>
                 <button class="top-btn" id="audioToggleBtn" onclick="toggleAudio()" title="Som">🔊</button>

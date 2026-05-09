@@ -123,13 +123,42 @@ function onTick(tickNumber) {
         updateSimulationStatusIndicator();
         updateFactoryHealth();
         updatePlanetHud();
-        if (typeof updateSecurityBar === 'function') updateSecurityBar();
+        if (typeof updateSecurityBar === "function") updateSecurityBar();
+        updateEraBar();
+        updateIdleWorkers();
     }
 
     if (tickNumber % 100 === 0) {
         updatePollution();
         if (currentWorkspace === 'planet') renderPlanetMap();
     }
+}
+
+function updateEraBar() {
+    const fill = document.getElementById('eraBarFill');
+    const label = document.getElementById('eraBarLabel');
+    const pct = document.getElementById('eraBarPct');
+    if (!fill || !label || !pct) return;
+    const era = gameState.era || 0;
+    const eraDef = typeof ERA_DEFINITIONS !== 'undefined' ? ERA_DEFINITIONS[era] : null;
+    const progress = gameState.eraProgress || 0;
+    label.textContent = eraDef ? eraDef.name : ('Era ' + era);
+    fill.style.width = progress + '%';
+    pct.textContent = progress > 0 ? progress + '%' : '';
+}
+
+function updateIdleWorkers() {
+    const el = document.getElementById('idleWorkersText');
+    if (!el) return;
+    let idle = 0;
+    gameState.machines.forEach(m => {
+        const def = typeof machineTypes !== 'undefined' ? machineTypes[m.type] : null;
+        if (!def || !def.workersMin) return;
+        const assigned = m.workersAssigned || 0;
+        if (assigned === 0) idle += def.workersMin;
+    });
+    el.textContent = idle > 0 ? idle + ' ociosos' : 'todos ativos';
+    el.style.color = idle > 0 ? 'var(--accent-orange)' : 'var(--accent-green)';
 }
 
 function startGameLoop() {

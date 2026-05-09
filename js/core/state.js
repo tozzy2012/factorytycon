@@ -2,7 +2,7 @@ window.SAVE_VERSION = 2;
 
 window.gameState = {
     saveVersion: 2,
-    gold: 100000,
+    gold: 1500,
     machines: [],
     connections: [],
     selectedMachine: null,

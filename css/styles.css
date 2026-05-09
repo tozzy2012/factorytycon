@@ -432,6 +432,23 @@
         }
 
         /* Animação de desbloqueio de era */
+        @keyframes goldFloat {
+            0%   { opacity: 1; transform: translateY(0) scale(1); }
+            70%  { opacity: 1; transform: translateY(-48px) scale(1.1); }
+            100% { opacity: 0; transform: translateY(-72px) scale(0.9); }
+        }
+        .gold-float-label {
+            position: fixed;
+            pointer-events: none;
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--accent-gold);
+            text-shadow: 0 1px 4px rgba(0,0,0,0.7);
+            z-index: 9998;
+            animation: goldFloat 1.1s ease-out forwards;
+            white-space: nowrap;
+        }
+
         @keyframes eraUnlockPop {
             from {
                 opacity: 0;
