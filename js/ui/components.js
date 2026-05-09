@@ -550,33 +550,16 @@ function showInfoPanel(machine) {
 
     panel.classList.add('open');
 
-    // ── Worker controls — event delegation (avoids inline onclick issues) ──
-    // Removed old listeners by replacing the panel body element
-    const body = document.getElementById('infoContent');
-    if (body) {
-        const newBody = body.cloneNode(true);  // clone removes all old listeners
-        body.parentNode.replaceChild(newBody, body);
-
-        newBody.addEventListener('click', (e) => {
-            const btn = e.target.closest('[data-action]');
-            if (!btn) return;
-            const action = btn.dataset.action;
-            const mid = parseInt(btn.dataset.machineId, 10);
-            if (isNaN(mid)) return;
-            if (action === 'workers-minus') adjustWorkers(mid, -1);
-            if (action === 'workers-plus')  adjustWorkers(mid,  1);
-        });
-
-        newBody.addEventListener('input', (e) => {
-            const el = e.target.closest('[data-action="workers-slider"]');
-            if (!el) return;
-            const mid = parseInt(el.dataset.machineId, 10);
-            if (isNaN(mid)) return;
-            adjustWorkers(mid, null, parseInt(el.value, 10));
-        });
+    // Attach worker listeners directly to fresh DOM nodes created by innerHTML.
+    if (def.workersMin > 0) {
+        const minusBtn = document.getElementById('workers-minus-' + machine.id);
+        const plusBtn  = document.getElementById('workers-plus-'  + machine.id);
+        const slider   = document.getElementById('workers-slider-' + machine.id);
+        if (minusBtn) minusBtn.addEventListener('click', () => adjustWorkers(machine.id, -1));
+        if (plusBtn)  plusBtn.addEventListener('click',  () => adjustWorkers(machine.id,  1));
+        if (slider)   slider.addEventListener('input',   () => adjustWorkers(machine.id, null, parseInt(slider.value, 10)));
     }
 }
-
 function clearHubFilters(machineId) {
     const machine = gameState.machines.find(m => m.id === machineId);
     if (!machine || machine.type !== 'hub') return;
