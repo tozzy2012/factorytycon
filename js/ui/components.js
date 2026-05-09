@@ -1641,17 +1641,24 @@ function createStarterChain() {
 
 // ═══ WORKER CONTROLS ═══
 window.adjustWorkers = function adjustWorkers(machineId, delta, absolute) {
-    // Debug: flash the infoPanel border green to confirm this function runs
-    const _dbgPanel = document.getElementById('infoPanel');
-    if (_dbgPanel) { _dbgPanel.style.borderLeft = '4px solid #4ade80'; setTimeout(() => { _dbgPanel.style.borderLeft = ''; }, 600); }
     const machine = gameState.machines.find(m => m.id === machineId);
-    if (!machine) { console.warn('[Workers] machine not found:', machineId); return; }
-    const def = machineTypes[machine.type];
+    const def = machine ? machineTypes[machine.type] : null;
+    const maxW = def ? (def.workersMax || def.workersMin) : 0;
+    const current = machine ? (machine.workersAssigned || 0) : -1;
+    const newVal = (absolute !== undefined && absolute !== null) ? Number(absolute) : current + delta;
+    const result = machine ? Math.max(0, Math.min(maxW, newVal)) : -1;
+
+    // Debug: show state in panel title so user can see without console
+    const _dbgTitle = document.getElementById('infoTitle');
+    if (_dbgTitle) {
+        if (!machine) _dbgTitle.textContent = 'ERRO: maquina id=' + machineId + ' nao encontrada (total=' + gameState.machines.length + ')';
+        else if (!def || !(def.workersMin > 0)) _dbgTitle.textContent = 'ERRO: def invalida tipo=' + (machine ? machine.type : '?');
+        else _dbgTitle.textContent = 'id=' + machineId + ' workers: ' + current + ' -> ' + result + ' (max=' + maxW + ')';
+    }
+
+    if (!machine) return;
     if (!def || !(def.workersMin > 0)) return;
-    const maxW = def.workersMax || def.workersMin;
-    const current = machine.workersAssigned || 0;
-    const newVal = (absolute !== undefined && absolute !== null) ? absolute : current + delta;
-    machine.workersAssigned = Math.max(0, Math.min(maxW, newVal));
+    machine.workersAssigned = result;
 
     // Update UI in-place without full re-render
     const countEl = document.getElementById('workers-count-' + machineId);
