@@ -488,9 +488,9 @@ function showInfoPanel(machine) {
                     <span style="font-size:11px;color:${(machine.workerFactor || 0) >= 0.9 ? '#4ade80' : (machine.workerFactor || 0) > 0 ? '#facc15' : '#f87171'};" id="workers-eff-${machine.id}">${Math.round((machine.workerFactor || 0) * 100)}% efic.</span>
                 </div>
                 <div style="display:flex;align-items:center;gap:8px;">
-                    <button class="btn btn-sm" id="workers-minus-${machine.id}" data-action="workers-minus" data-machine-id="${machine.id}">－</button>
-                    <input type="range" id="workers-slider-${machine.id}" min="0" max="${def.workersMax || def.workersMin}" value="${machine.workersAssigned || 0}" style="flex:1;accent-color:#4ade80;" data-action="workers-slider" data-machine-id="${machine.id}">
-                    <button class="btn btn-sm" id="workers-plus-${machine.id}" data-action="workers-plus" data-machine-id="${machine.id}">＋</button>
+                    <button class="btn btn-sm worker-btn" data-machine-id="${machine.id}" data-delta="-1" id="workers-minus-${machine.id}">－</button>
+                    <input type="range" class="worker-slider" data-machine-id="${machine.id}" id="workers-slider-${machine.id}" min="0" max="${def.workersMax || def.workersMin}" value="${machine.workersAssigned || 0}" style="flex:1;accent-color:#4ade80;">
+                    <button class="btn btn-sm worker-btn" data-machine-id="${machine.id}" data-delta="1" id="workers-plus-${machine.id}">＋</button>
                 </div>
                 <div style="font-size:10px;color:var(--text-tertiary);margin-top:6px;">Min: ${def.workersMin} · Sem trabalhadores = máquina parada</div>
             </div>
@@ -550,15 +550,7 @@ function showInfoPanel(machine) {
 
     panel.classList.add('open');
 
-    // Attach worker listeners directly to fresh DOM nodes created by innerHTML.
-    if (def.workersMin > 0) {
-        const minusBtn = document.getElementById('workers-minus-' + machine.id);
-        const plusBtn  = document.getElementById('workers-plus-'  + machine.id);
-        const slider   = document.getElementById('workers-slider-' + machine.id);
-        if (minusBtn) minusBtn.addEventListener('click', () => adjustWorkers(machine.id, -1));
-        if (plusBtn)  plusBtn.addEventListener('click',  () => adjustWorkers(machine.id,  1));
-        if (slider)   slider.addEventListener('input',   () => adjustWorkers(machine.id, null, parseInt(slider.value, 10)));
-    }
+    // Worker events handled by document-level delegation (see init)
 }
 function clearHubFilters(machineId) {
     const machine = gameState.machines.find(m => m.id === machineId);
@@ -1254,6 +1246,21 @@ async function init() {
     initCityState();
     createToolbarChips();
     setupEventListeners();
+
+    // ── Worker controls — document-level delegation (survives panel re-renders) ──
+    document.addEventListener('click', (e) => {
+        const btn = e.target.closest('.worker-btn');
+        if (!btn) return;
+        const mid = parseInt(btn.dataset.machineId, 10);
+        const delta = parseInt(btn.dataset.delta, 10);
+        if (!isNaN(mid) && !isNaN(delta)) adjustWorkers(mid, delta);
+    });
+    document.addEventListener('input', (e) => {
+        const slider = e.target.closest('.worker-slider');
+        if (!slider) return;
+        const mid = parseInt(slider.dataset.machineId, 10);
+        if (!isNaN(mid)) adjustWorkers(mid, null, parseInt(slider.value, 10));
+    });
     initWorldMap();
     initPlanetControls();
     startGameLoop();
