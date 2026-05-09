@@ -1557,10 +1557,17 @@ function showTitleScreen() {
 function hideTitleScreen(newGame) {
     if (newGame) {
         localStorage.removeItem('industrialPipeline_save');
-        // Reset state in-place (no reload)
+        // Limpar save do backend (se logado)
+        if (window.API && API.isLoggedIn()) {
+            API.deleteSave(1).catch(() => {});
+        }
+        // Reset state completo
         gameState.gold = 1500;
         gameState.machines = [];
         gameState.connections = [];
+        gameState.resourceFlow = {};
+        gameState.selectedMachine = null;
+        gameState.connectingFrom = null;
         gameState.nextId = 1;
         gameState.era = 0;
         gameState.eraProgress = 0;
@@ -1574,16 +1581,18 @@ function hideTitleScreen(newGame) {
         gameState.tutorial = { done: false, step: 0 };
         gameState.stats = { playTime: 0, firstSale: false };
         initCityState();
-        // Limpar canvas
-        // Clear industry canvas: machine nodes (divs) + SVG paths
+        // Limpar canvas industry (máquinas, conexões, overlays)
         const world = document.getElementById('canvasWorld');
-        if (world) { world.querySelectorAll('.machine-node, .machine-delete-btn, .machine-overlay').forEach(e => e.remove()); }
+        if (world) {
+            world.querySelectorAll('.machine-node, .machine-delete-btn, .machine-overlay, .conn-delete-btn').forEach(e => e.remove());
+        }
         const svg = document.getElementById('canvasSvg');
         if (svg) { while (svg.firstChild) svg.removeChild(svg.firstChild); }
-
-        // Clear defense canvas
+        // Limpar canvas defense
         const worldDef = document.getElementById('canvasWorldDefense');
-        if (worldDef) { worldDef.querySelectorAll('.machine-node, .machine-delete-btn, .machine-overlay').forEach(e => e.remove()); }
+        if (worldDef) {
+            worldDef.querySelectorAll('.machine-node, .machine-delete-btn, .machine-overlay, .conn-delete-btn').forEach(e => e.remove());
+        }
         const svgDef = document.getElementById('canvasSvgDefense');
         if (svgDef) { while (svgDef.firstChild) svgDef.removeChild(svgDef.firstChild); }
         closeInfoPanel();
