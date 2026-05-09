@@ -488,9 +488,9 @@ function showInfoPanel(machine) {
                     <span style="font-size:11px;color:${(machine.workerFactor || 0) >= 0.9 ? '#4ade80' : (machine.workerFactor || 0) > 0 ? '#facc15' : '#f87171'};" id="workers-eff-${machine.id}">${Math.round((machine.workerFactor || 0) * 100)}% efic.</span>
                 </div>
                 <div style="display:flex;align-items:center;gap:8px;">
-                    <button class="btn btn-sm worker-btn" data-machine-id="${machine.id}" data-delta="-1" id="workers-minus-${machine.id}">－</button>
-                    <input type="range" class="worker-slider" data-machine-id="${machine.id}" id="workers-slider-${machine.id}" min="0" max="${def.workersMax || def.workersMin}" value="${machine.workersAssigned || 0}" style="flex:1;accent-color:#4ade80;">
-                    <button class="btn btn-sm worker-btn" data-machine-id="${machine.id}" data-delta="1" id="workers-plus-${machine.id}">＋</button>
+                    <button type="button" class="btn btn-sm" id="workers-minus-${machine.id}" onclick="window.adjustWorkers(${machine.id}, -1)">－</button>
+                    <input type="range" id="workers-slider-${machine.id}" min="0" max="${def.workersMax || def.workersMin}" value="${machine.workersAssigned || 0}" style="flex:1;accent-color:#4ade80;" oninput="window.adjustWorkers(${machine.id}, null, parseInt(this.value, 10))">
+                    <button type="button" class="btn btn-sm" id="workers-plus-${machine.id}" onclick="window.adjustWorkers(${machine.id}, 1)">＋</button>
                 </div>
                 <div style="font-size:10px;color:var(--text-tertiary);margin-top:6px;">Min: ${def.workersMin} · Sem trabalhadores = máquina parada</div>
             </div>
@@ -1247,20 +1247,6 @@ async function init() {
     createToolbarChips();
     setupEventListeners();
 
-    // ── Worker controls — document-level delegation (survives panel re-renders) ──
-    document.addEventListener('click', (e) => {
-        const btn = e.target.closest('.worker-btn');
-        if (!btn) return;
-        const mid = parseInt(btn.dataset.machineId, 10);
-        const delta = parseInt(btn.dataset.delta, 10);
-        if (!isNaN(mid) && !isNaN(delta)) adjustWorkers(mid, delta);
-    });
-    document.addEventListener('input', (e) => {
-        const slider = e.target.closest('.worker-slider');
-        if (!slider) return;
-        const mid = parseInt(slider.dataset.machineId, 10);
-        if (!isNaN(mid)) adjustWorkers(mid, null, parseInt(slider.value, 10));
-    });
     initWorldMap();
     initPlanetControls();
     startGameLoop();
@@ -1655,8 +1641,11 @@ function createStarterChain() {
 
 // ═══ WORKER CONTROLS ═══
 window.adjustWorkers = function adjustWorkers(machineId, delta, absolute) {
+    // Debug: flash the infoPanel border green to confirm this function runs
+    const _dbgPanel = document.getElementById('infoPanel');
+    if (_dbgPanel) { _dbgPanel.style.borderLeft = '4px solid #4ade80'; setTimeout(() => { _dbgPanel.style.borderLeft = ''; }, 600); }
     const machine = gameState.machines.find(m => m.id === machineId);
-    if (!machine) return;
+    if (!machine) { console.warn('[Workers] machine not found:', machineId); return; }
     const def = machineTypes[machine.type];
     if (!def || !(def.workersMin > 0)) return;
     const maxW = def.workersMax || def.workersMin;
