@@ -1402,9 +1402,9 @@ init();
 
 // ═══ TUTORIAL SYSTEM (game-design skill: hook quickly + early wins) ═══
 const TUTORIAL_STEPS = [
-    { target: '.dock-chips', title: '👋 Bem-vindo!', text: 'Este é o <b>dock de máquinas</b>. Clique em <b>Mina de Carvão</b> para colocar a sua primeira máquina.', event: 'machine_placed' },
-    { target: '#canvas', title: '🔗 Conecte as máquinas', text: 'Agora <b>clique na Mina</b> e depois na <b>Caldeira</b> para conectá-las. O carvão vai fluir automaticamente.', event: 'connection_made' },
-    { target: '#goldTopDisplay', title: '💰 Venda seus produtos!', text: 'Coloque um <b>Mercado</b> e conecte a ele um produto final. O ouro aumenta automaticamente com as vendas!', event: 'first_sale' },
+    { target: '.dock-chips', title: '👋 Bem-vindo!', text: 'Este é o <b>dock de máquinas</b> (barra inferior). Clique em <b>Caldeira a Carvão</b> para colocar sua primeira máquina.<br><br><span style="color:#888;font-size:11px">🖱️ <b>Navegar:</b> Scroll do mouse = zoom · Clique+arraste no fundo = mover a câmera</span>', event: 'machine_placed' },
+    { target: '#canvas', title: '🔗 Conecte as máquinas', text: 'Ótimo! Agora coloque uma <b>Máquina a Vapor</b> ao lado e <b>clique na Caldeira → depois na Máquina a Vapor</b> para conectá-las.<br><br><span style="color:#888;font-size:11px">⌨️ <b>Zoom:</b> Use os botões <b>＋/－</b> no topo ou <b>Ctrl+Scroll</b></span>', event: 'connection_made' },
+    { target: '#goldTopDisplay', title: '💰 Hora de vender!', text: 'Agora coloque um <b>Mercado</b> e conecte um produto final a ele. O ouro sobe automaticamente com cada venda!<br><br><span style="color:#888;font-size:11px">💡 <b>Dica:</b> Clique em qualquer máquina para ver detalhes e status</span>', event: 'first_sale' },
 ];
 
 function showTutorialStep(step) {
@@ -1497,11 +1497,38 @@ function showTitleScreen() {
 function hideTitleScreen(newGame) {
     if (newGame) {
         localStorage.removeItem('industrialPipeline_save');
-        location.reload();
-        return;
+        // Reset state in-place (no reload)
+        gameState.gold = 100000;
+        gameState.machines = [];
+        gameState.connections = [];
+        gameState.nextId = 1;
+        gameState.era = 0;
+        gameState.eraProgress = 0;
+        gameState.totalProducedGlobal = {};
+        gameState.globalInventory = {};
+        gameState.securityLevel = 100;
+        gameState.worldMap = {};
+        gameState.pollutionLevel = 0;
+        gameState.discoveryPoints = 100;
+        gameState.city = null;
+        gameState.tutorial = { done: false, step: 0 };
+        gameState.stats = { playTime: 0, firstSale: false };
+        initCityState();
+        // Limpar canvas
+        const svg = document.getElementById('canvasSvg');
+        if (svg) { svg.querySelectorAll('.machine-group, .connection-group').forEach(e => e.remove()); }
+        updateGoldDisplay();
+        createToolbarChips();
+        populateDock('industry');
+        switchWorkspace('industry');
     }
     const el = document.getElementById('title-screen');
-    if (el) { el.classList.add('hiding'); setTimeout(() => el.remove(), 500); }
+    if (el) {
+        el.style.transition = 'opacity 0.5s ease';
+        el.style.opacity = '0';
+        el.style.pointerEvents = 'none';
+        setTimeout(() => el.remove(), 520);
+    }
     if (!gameState.tutorial?.done) showTutorialStep(0);
 }
 
