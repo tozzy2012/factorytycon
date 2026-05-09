@@ -22,8 +22,6 @@ window.machineTypes = {
         productionRate: 3,
         workersMin: 1,
         workersMax: 2,
-        workersMin: 1,
-        workersMax: 2,
         inputRatios: { carvao_bruto: 0.4, madeira_bruta: 0.5, agua_bruta: 0.3 }, // aceita carvão OU madeira
         description: 'Queima carvão ou madeira e usa água para gerar vapor. Requer combustível e água para funcionar.'
     },

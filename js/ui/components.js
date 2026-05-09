@@ -484,13 +484,13 @@ function showInfoPanel(machine) {
         <div class="info-section"><h4>⚒️ Trabalhadores</h4>
             <div class="info-card">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-                    <span style="font-size:12px;color:var(--text-secondary);">Alocados: <b style="color:var(--text-primary);">${machine.workersAssigned || 0}</b> / ${def.workersMax || def.workersMin}</span>
-                    <span style="font-size:11px;color:${(machine.workerFactor || 0) >= 0.9 ? '#4ade80' : (machine.workerFactor || 0) > 0 ? '#facc15' : '#f87171'};">${Math.round((machine.workerFactor || 0) * 100)}% efic.</span>
+                    <span style="font-size:12px;color:var(--text-secondary);">Alocados: <b style="color:var(--text-primary);" id="workers-count-${machine.id}">${machine.workersAssigned || 0}</b> / ${def.workersMax || def.workersMin}</span>
+                    <span style="font-size:11px;color:${(machine.workerFactor || 0) >= 0.9 ? '#4ade80' : (machine.workerFactor || 0) > 0 ? '#facc15' : '#f87171'};" id="workers-eff-${machine.id}">${Math.round((machine.workerFactor || 0) * 100)}% efic.</span>
                 </div>
                 <div style="display:flex;align-items:center;gap:8px;">
-                    <button class="btn btn-sm" onclick="setMachineWorkers(${machine.id}, ${(machine.workersAssigned || 0) - 1}); showInfoPanel(gameState.machines.find(m=>m.id===${machine.id}));" ${(machine.workersAssigned || 0) <= 0 ? 'disabled' : ''}>－</button>
-                    <input type="range" min="0" max="${def.workersMax || def.workersMin}" value="${machine.workersAssigned || 0}" style="flex:1;accent-color:#4ade80;" oninput="setMachineWorkers(${machine.id}, parseInt(this.value)); showInfoPanel(gameState.machines.find(m=>m.id===${machine.id}));">
-                    <button class="btn btn-sm" onclick="setMachineWorkers(${machine.id}, ${(machine.workersAssigned || 0) + 1}); showInfoPanel(gameState.machines.find(m=>m.id===${machine.id}));" ${(machine.workersAssigned || 0) >= (def.workersMax || def.workersMin) ? 'disabled' : ''}>＋</button>
+                    <button class="btn btn-sm" id="workers-minus-${machine.id}" onclick="adjustWorkers(${machine.id}, -1)">－</button>
+                    <input type="range" id="workers-slider-${machine.id}" min="0" max="${def.workersMax || def.workersMin}" value="${machine.workersAssigned || 0}" style="flex:1;accent-color:#4ade80;" oninput="adjustWorkers(${machine.id}, null, parseInt(this.value))">
+                    <button class="btn btn-sm" id="workers-plus-${machine.id}" onclick="adjustWorkers(${machine.id}, 1)">＋</button>
                 </div>
                 <div style="font-size:10px;color:var(--text-tertiary);margin-top:6px;">Min: ${def.workersMin} · Sem trabalhadores = máquina parada</div>
             </div>
@@ -1547,6 +1547,28 @@ function hideTitleScreen(newGame) {
         setTimeout(() => el.remove(), 520);
     }
     if (!gameState.tutorial?.done) showTutorialStep(0);
+}
+
+// ═══ WORKER CONTROLS ═══
+function adjustWorkers(machineId, delta, absolute) {
+    const machine = gameState.machines.find(m => m.id === machineId);
+    if (!machine) return;
+    const def = machineTypes[machine.type];
+    if (!def || !(def.workersMin > 0)) return;
+    const maxW = def.workersMax || def.workersMin;
+    const current = machine.workersAssigned || 0;
+    const newVal = (absolute !== undefined && absolute !== null) ? absolute : current + delta;
+    machine.workersAssigned = Math.max(0, Math.min(maxW, newVal));
+
+    // Update UI in-place without full re-render
+    const countEl = document.getElementById('workers-count-' + machineId);
+    if (countEl) countEl.textContent = machine.workersAssigned;
+    const slider = document.getElementById('workers-slider-' + machineId);
+    if (slider) slider.value = machine.workersAssigned;
+    const minusBtn = document.getElementById('workers-minus-' + machineId);
+    if (minusBtn) minusBtn.disabled = machine.workersAssigned <= 0;
+    const plusBtn = document.getElementById('workers-plus-' + machineId);
+    if (plusBtn) plusBtn.disabled = machine.workersAssigned >= maxW;
 }
 
 // ═══ AUDIO TOGGLE ═══
