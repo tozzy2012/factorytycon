@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Octagon body: flat sides top/bottom/left/right, vertices at 45° -->
+  <!-- Points: top-left(20,8) top-right(44,8) right-top(56,20) right-bot(56,44) bot-right(44,56) bot-left(20,56) left-bot(8,44) left-top(8,20) -->
+  <polygon points="20,8 44,8 56,20 56,44 44,56 20,56 8,44 8,20" fill="rgba(148,163,184,0.12)" stroke="#94a3b8" stroke-width="2.5"/>
+  <!-- Inner circle -->
+  <circle cx="32" cy="32" r="8" fill="rgba(148,163,184,0.18)" stroke="#94a3b8" stroke-width="1.5"/>
+  <!-- Center dot -->
+  <circle cx="32" cy="32" r="2.5" fill="#94a3b8" stroke="none"/>
+  <!-- 8 spokes from center to midpoints of each octagon side -->
+  <!-- Top -->
+  <line x1="32" y1="24" x2="32" y2="8"/>
+  <!-- Bottom -->
+  <line x1="32" y1="40" x2="32" y2="56"/>
+  <!-- Left -->
+  <line x1="24" y1="32" x2="8" y2="32"/>
+  <!-- Right -->
+  <line x1="40" y1="32" x2="56" y2="32"/>
+  <!-- Top-left vertex -->
+  <line x1="26.3" y1="26.3" x2="20" y2="8"/>
+  <!-- Top-right vertex -->
+  <line x1="37.7" y1="26.3" x2="44" y2="8"/>
+  <!-- Bottom-left vertex -->
+  <line x1="26.3" y1="37.7" x2="20" y2="56"/>
+  <!-- Bottom-right vertex -->
+  <line x1="37.7" y1="37.7" x2="44" y2="56"/>
+  <!-- Port dots at octagon vertices and side midpoints -->
+  <circle cx="32" cy="8"  r="2.5" fill="#94a3b8"/>
+  <circle cx="32" cy="56" r="2.5" fill="#94a3b8"/>
+  <circle cx="8"  cy="32" r="2.5" fill="#94a3b8"/>
+  <circle cx="56" cy="32" r="2.5" fill="#94a3b8"/>
+  <circle cx="20" cy="8"  r="2.5" fill="#94a3b8"/>
+  <circle cx="44" cy="8"  r="2.5" fill="#94a3b8"/>
+  <circle cx="20" cy="56" r="2.5" fill="#94a3b8"/>
+  <circle cx="44" cy="56" r="2.5" fill="#94a3b8"/>
+</svg>
