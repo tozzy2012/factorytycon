@@ -1,6 +1,6 @@
 # Industrial Pipeline — Game Design Document (Technical)
 
-> **Versão:** 0.004.4 · **Engine:** Vanilla JS (browser) · **Repo:** `tozzy2012/factorytycon`
+> **Versão:** 0.004.5 · **Engine:** Vanilla JS (browser) · **Repo:** `tozzy2012/factorytycon`
 
 ---
 
@@ -465,7 +465,45 @@ Era 4: TITÂNIO
 
 ---
 
-## 12. Save System (components.js)
+## 12. Interação UI (components.js)
+
+### Info Panel (gaveta lateral)
+
+Aberto ao clicar em uma máquina no canvas. Mostra:
+- Nome, tier, status, ícone
+- Produção atual vs máxima (por hora)
+- Eficiência %
+- Fluxo de entrada/saída em tempo real
+- Buffers (entrada/saída com barra de preenchimento)
+- **Controle de trabalhadores** (se `def.workersMin > 0`): slider + botões ＋/－
+- Diagnóstico textual
+- Histórico de eficiência
+- Filtros do Hub (se hub)
+- Botão de deletar máquina
+
+### Controle de trabalhadores no Info Panel
+
+```
+Componente: slider range + botões ＋/－
+Função: window.adjustWorkers(machineId, delta, absolute)
+  → Atualiza machine.workersAssigned
+  → Atualiza DOM in-place (sem re-render do painel)
+  → Respeita limites [0, workersMax]
+```
+
+### Listeners de clique (canvas)
+
+```javascript
+document.addEventListener('click', (e) => {
+    if (e.target.closest('#infoPanel')) return;     // cliques no painel são ignorados
+    if (e.target.closest('.machine-node')) → selectMachine()
+    else → closeInfoPanel()
+});
+```
+
+---
+
+## 13. Save System (components.js)
 
 ```
 SAVE_VERSION = 2
@@ -482,7 +520,7 @@ Migration: saves sem saveVersion recebem defaults para novos campos
 
 ---
 
-## 13. Audio (audio.js)
+## 14. Audio (audio.js)
 
 Motor sintético via Web Audio API. Zero assets de áudio.
 
@@ -501,7 +539,7 @@ Motor sintético via Web Audio API. Zero assets de áudio.
 
 ---
 
-## 14. Tutorial (components.js)
+## 15. Tutorial (components.js)
 
 3 passos guiados com overlay bottom:
 
@@ -513,7 +551,7 @@ Motor sintético via Web Audio API. Zero assets de áudio.
 
 ---
 
-## 15. Fórmulas de Balanceamento
+## 16. Fórmulas de Balanceamento
 
 ### Tempo para primeira casa (Era 0, cold start)
 
@@ -545,7 +583,7 @@ O bottleneck intencional é: **mais casas → mais pop → mais workers → mais
 
 ---
 
-## 16. Constantes Globais
+## 17. Constantes Globais
 
 | Constante | Valor | Arquivo |
 |-----------|-------|---------|
@@ -562,4 +600,4 @@ O bottleneck intencional é: **mais casas → mais pop → mais workers → mais
 
 ---
 
-*Documento gerado automaticamente a partir do código-fonte em v0.004.4*
+*Documento gerado automaticamente a partir do código-fonte em v0.004.5*
