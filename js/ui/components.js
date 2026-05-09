@@ -714,6 +714,8 @@ function setupEventListeners() {
 
     document.addEventListener('click', (e) => {
         if (e.target.classList.contains('port') || e.target.classList.contains('delete-btn')) return;
+        // Don't close panel if clicking inside it
+        if (e.target.closest('#infoPanel')) return;
         const machineNode = e.target.closest('.machine-node');
         if (machineNode) {
             const machineId = Number(machineNode.id.replace('machine-', ''));
@@ -1550,7 +1552,7 @@ function hideTitleScreen(newGame) {
 }
 
 // ═══ WORKER CONTROLS ═══
-function adjustWorkers(machineId, delta, absolute) {
+window.adjustWorkers = function adjustWorkers(machineId, delta, absolute) {
     const machine = gameState.machines.find(m => m.id === machineId);
     if (!machine) return;
     const def = machineTypes[machine.type];
@@ -1569,7 +1571,8 @@ function adjustWorkers(machineId, delta, absolute) {
     if (minusBtn) minusBtn.disabled = machine.workersAssigned <= 0;
     const plusBtn = document.getElementById('workers-plus-' + machineId);
     if (plusBtn) plusBtn.disabled = machine.workersAssigned >= maxW;
-}
+    console.log('[Workers] machine', machineId, '→', machine.workersAssigned, '/', maxW);
+};
 
 // ═══ AUDIO TOGGLE ═══
 function toggleAudio() {
