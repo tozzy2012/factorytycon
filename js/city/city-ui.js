@@ -117,7 +117,7 @@ function _renderBuildPanel() {
 
         const costEntries = Object.entries(def.buildCost || {});
         const costStr = costEntries.length
-            ? costEntries.map(([r, q]) => `${q} ${getResourceName(r)}`).join(' · ')
+            ? costEntries.map(([r, q]) => `${q} ${getResourceUnitBase(r)} ${getResourceName(r)}`).join(' · ')
             : 'Grátis';
         const isFree = costEntries.length === 0;
 

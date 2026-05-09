@@ -1,6 +1,6 @@
 # Industrial Pipeline — Game Design Document (Technical)
 
-> **Versão:** 0.004.3 · **Engine:** Vanilla JS (browser) · **Repo:** `tozzy2012/factorytycon`
+> **Versão:** 0.004.4 · **Engine:** Vanilla JS (browser) · **Repo:** `tozzy2012/factorytycon`
 
 ---
 
@@ -72,6 +72,24 @@
 ---
 
 ## 3. Recursos
+
+### Sistema de Unidades
+
+Cada recurso tem uma unidade base definida em `RESOURCE_UNITS` (resources.db.js):
+
+| Tipo | Unidade | Display rate | Display estoque | Exemplos |
+|------|---------|-------------|-----------------|----------|
+| Bulk | `kg` | `kg/h` | `kg` ou `t` (≥1000) | carvao_bruto, ferro_gusa, aco_bruto |
+| Líquido | `L` | `L/h` | `L` ou `m³` (≥1000) | agua_bruta, agua_tratada |
+| Item discreto | `un` | `un/h` | `un` | tabua_madeira, chapa_aco, componente_eletronico |
+| Energia | `kW` | `kW/h` | `kW` ou `MW` | eletricidade |
+| Mecânica | `HP` | `HP/h` | `HP` | energia_mecanica |
+| Gás | `Nm³` | `Nm³/h` | `Nm³` | ar_comprimido |
+| Vapor | `kg` | `kg/h` | `kg` | vapor |
+
+**Regra de consistência:** A unidade usada em **produção** (`un/h`), **estoque** (`30 un`), e **custos de construção** (`30 un Tábua de Madeira`) é sempre a mesma. Não existe conversão.
+
+**Itens discretos (un):** tabua_madeira, chapa_aco, vergalhao, cobre_fino, chapa_aluminio, componente_eletronico, explosivo_industrial, liga_titanio, escudo_madeira, flechas_primitivas, armamento_primitivo, muralha_reforcada, componente_cortante, barra_ferro_forjado, chapa_blindagem, lingote_ferro_refinado
 
 ### 3.1 Recursos sólidos (armazenáveis)
 
@@ -503,12 +521,12 @@ Motor sintético via Web Audio API. Zero assets de áudio.
 Pop inicial: 8 moradores → 5 trabalhadores (70%)
 Cidade usa 2 (campo de grãos), livre: 3
 
-1× Lenhador (1 worker, rate 2.5/s × 50% = 1.25/s madeira)
-1× Serraria (1 worker, rate 1.5/s × 50% = 0.75/s tábua)
-1× Captação (1 worker, rate 3/s × 50% = 1.5/s agua)
+1× Lenhador (1 worker, rate 2.5 kg/s × 50% = 1.25 kg/s madeira_bruta)
+1× Serraria (1 worker, rate 1.5 un/s × 50% = 0.75 un/s tábua_madeira)
+1× Captação (1 worker, rate 3 L/s × 50% = 1.5 L/s agua_bruta)
 
-Casa Simples custa 30 tábuas
-Tempo: 30 / 0.75 = 40 segundos ← primeira casa
+Casa Simples custa 30 un tábua_madeira
+Tempo: 30 un / 0.75 un/s = 40 segundos ← primeira casa
 
 Com casa: +4 moradores → 12 total → 8 workers → mais indústria
 ```
@@ -544,4 +562,4 @@ O bottleneck intencional é: **mais casas → mais pop → mais workers → mais
 
 ---
 
-*Documento gerado automaticamente a partir do código-fonte em v0.004.3*
+*Documento gerado automaticamente a partir do código-fonte em v0.004.4*

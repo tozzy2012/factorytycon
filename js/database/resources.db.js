@@ -105,11 +105,36 @@ function getResourceColor(resource) {
     };
     return colors[resource] || '#666';
 }
+// Unidades por recurso — consistente entre produção, estoque e custos
+const RESOURCE_UNITS = {
+    // Bulk (kg)
+    carvao_bruto: 'kg', madeira_bruta: 'kg', minerio_frag: 'kg', calcario_bruto: 'kg',
+    coque: 'kg', cal: 'kg', sinter: 'kg', conc_cu: 'kg',
+    ferro_gusa: 'kg', cobre_blister: 'kg', aco_bruto: 'kg', cobre_elet: 'kg',
+    bauxita: 'kg', alumina: 'kg', aluminio_primario: 'kg', areia_silica: 'kg',
+    silicio_puro: 'kg', esponja_titanio: 'kg', minerio_titanio: 'kg',
+    petroleo_bruto: 'kg', diesel: 'kg', nitrato: 'kg',
+    soda_caustica: 'kg', criolita: 'kg', minerio_fe: 'kg', minerio_cu: 'kg',
+    // Líquidos (L)
+    agua_bruta: 'L', agua_tratada: 'L',
+    // Energia/Fluxo
+    eletricidade: 'kW', vapor: 'kg', energia_mecanica: 'HP', ar_comprimido: 'Nm³',
+    // Itens discretos (un)
+    tabua_madeira: 'un', chapa_aco: 'un', vergalhao: 'un', cobre_fino: 'un',
+    chapa_aluminio: 'un', componente_eletronico: 'un', explosivo_industrial: 'un',
+    liga_titanio: 'un', escudo_madeira: 'un', flechas_primitivas: 'un',
+    armamento_primitivo: 'un', muralha_reforcada: 'un', componente_cortante: 'un',
+    barra_ferro_forjado: 'un', chapa_blindagem: 'un', lingote_ferro_refinado: 'un',
+};
+window.RESOURCE_UNITS = RESOURCE_UNITS;
+
 function getResourceUnit(resource) {
-    if (resource === 'eletricidade') return 'kWh/h';
-    if (resource === 'agua_bruta' || resource === 'agua_tratada') return 'L/h';
-    if (resource === 'ar_comprimido') return 'Nm³/h';
-    return 'kg/h';
+    const u = RESOURCE_UNITS[resource] || 'kg';
+    return u + '/h';
+}
+
+function getResourceUnitBase(resource) {
+    return RESOURCE_UNITS[resource] || 'kg';
 }
 
 function formatRatePerHour(valuePerSec, resource = null) {
@@ -120,7 +145,8 @@ function formatRatePerHour(valuePerSec, resource = null) {
         maximumFractionDigits: decimals
     });
     if (!resource) return `${numeric} /h`;
-    return `${numeric} ${getResourceUnit(resource)}`;
+    const unit = getResourceUnitBase(resource);
+    return `${numeric} ${unit}/h`;
 }
 
 function formatNumericPerHour(valuePerSec, resource = null) {
@@ -129,18 +155,29 @@ function formatNumericPerHour(valuePerSec, resource = null) {
 
 function formatStoredAmount(quantity, resource = null) {
     const value = Math.max(0, quantity || 0);
-    if (resource === 'eletricidade') {
-        if (value >= 1000) return `${(value / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 2 })} MWh`;
-        return `${value.toLocaleString('pt-BR', { maximumFractionDigits: 1 })} kWh`;
+    const unit = getResourceUnitBase(resource);
+
+    if (unit === 'un') {
+        // Discrete items — show as integer or 1 decimal
+        if (value >= 10000) return `${(value / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}k un`;
+        return `${value.toLocaleString('pt-BR', { maximumFractionDigits: value >= 100 ? 0 : 1 })} un`;
     }
-    if (resource === 'agua_bruta' || resource === 'agua_tratada') {
+    if (unit === 'kW') {
+        if (value >= 1000) return `${(value / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 2 })} MW`;
+        return `${value.toLocaleString('pt-BR', { maximumFractionDigits: 1 })} kW`;
+    }
+    if (unit === 'L') {
         if (value >= 1000) return `${(value / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 2 })} m³`;
         return `${value.toLocaleString('pt-BR', { maximumFractionDigits: 1 })} L`;
     }
-    if (resource === 'ar_comprimido') {
+    if (unit === 'Nm³') {
         if (value >= 1000) return `${(value / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 2 })} kNm³`;
         return `${value.toLocaleString('pt-BR', { maximumFractionDigits: 1 })} Nm³`;
     }
+    if (unit === 'HP') {
+        return `${value.toLocaleString('pt-BR', { maximumFractionDigits: 1 })} HP`;
+    }
+    // kg default
     if (value >= 1000) return `${(value / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 2 })} t`;
     return `${value.toLocaleString('pt-BR', { maximumFractionDigits: 1 })} kg`;
 }
