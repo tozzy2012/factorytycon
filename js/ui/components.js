@@ -372,6 +372,7 @@ function showInfoPanel(machine) {
     const tierDef = getTierDef(machine);
     const currentPerHour = (machine.production || 0) * 3600;
     const maxPerHour = (tierDef.productionRate || 0) * 3600;
+    const displayEfficiency = maxPerHour > 0 ? currentPerHour / maxPerHour : 0;
 
     title.textContent = `${def.name} · T${machine.tier + 1}`;
 
@@ -460,7 +461,7 @@ function showInfoPanel(machine) {
                 </div>
                 <div class="machine-metric">
                     <div class="machine-metric-label">Eficiência</div>
-                    <div class="machine-metric-value">${formatDecimal((machine.efficiency || 0) * 100)}%</div>
+                    <div class="machine-metric-value">${formatDecimal(displayEfficiency * 100)}%</div>
                 </div>
                 <div class="machine-metric">
                     <div class="machine-metric-label">Tempo operando</div>
