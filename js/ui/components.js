@@ -488,9 +488,7 @@ function showInfoPanel(machine) {
                     <span style="font-size:11px;color:${(machine.workerFactor || 0) >= 0.9 ? '#4ade80' : (machine.workerFactor || 0) > 0 ? '#facc15' : '#f87171'};" id="workers-eff-${machine.id}">${Math.round((machine.workerFactor || 0) * 100)}% efic.</span>
                 </div>
                 <div style="display:flex;align-items:center;gap:8px;">
-                    <button type="button" class="btn btn-sm" id="workers-minus-${machine.id}" onclick="window.adjustWorkers(${machine.id}, -1)">－</button>
                     <input type="range" id="workers-slider-${machine.id}" min="0" max="${def.workersMax || def.workersMin}" value="${machine.workersAssigned || 0}" style="flex:1;accent-color:#4ade80;" oninput="window.adjustWorkers(${machine.id}, null, parseInt(this.value, 10))">
-                    <button type="button" class="btn btn-sm" id="workers-plus-${machine.id}" onclick="window.adjustWorkers(${machine.id}, 1)">＋</button>
                 </div>
                 <div style="font-size:10px;color:var(--text-tertiary);margin-top:6px;">Min: ${def.workersMin} · Sem trabalhadores = máquina parada</div>
             </div>
@@ -1210,7 +1208,6 @@ function updateGoldDisplay() {
     if (!el) return;
     if (isNaN(gameState.gold)) gameState.gold = 0;
     el.textContent = '💰 ' + Math.floor(gameState.gold).toLocaleString('pt-BR');
-}`;
 }
 
 function selectMachine(machine) {
@@ -1648,14 +1645,6 @@ window.adjustWorkers = function adjustWorkers(machineId, delta, absolute) {
     const newVal = (absolute !== undefined && absolute !== null) ? Number(absolute) : current + delta;
     const result = machine ? Math.max(0, Math.min(maxW, newVal)) : -1;
 
-    // Debug: show state in panel title so user can see without console
-    const _dbgTitle = document.getElementById('infoTitle');
-    if (_dbgTitle) {
-        if (!machine) _dbgTitle.textContent = 'ERRO: maquina id=' + machineId + ' nao encontrada (total=' + gameState.machines.length + ')';
-        else if (!def || !(def.workersMin > 0)) _dbgTitle.textContent = 'ERRO: def invalida tipo=' + (machine ? machine.type : '?');
-        else _dbgTitle.textContent = 'id=' + machineId + ' workers: ' + current + ' -> ' + result + ' (max=' + maxW + ')';
-    }
-
     if (!machine) return;
     if (!def || !(def.workersMin > 0)) return;
     machine.workersAssigned = result;
@@ -1669,7 +1658,6 @@ window.adjustWorkers = function adjustWorkers(machineId, delta, absolute) {
     if (minusBtn) minusBtn.disabled = machine.workersAssigned <= 0;
     const plusBtn = document.getElementById('workers-plus-' + machineId);
     if (plusBtn) plusBtn.disabled = machine.workersAssigned >= maxW;
-    console.log('[Workers] machine', machineId, '→', machine.workersAssigned, '/', maxW);
 };
 
 // ═══ AUDIO TOGGLE ═══
