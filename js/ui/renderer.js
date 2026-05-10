@@ -355,7 +355,8 @@ function renderMachine(machine) {
             ${isHub ? '' : `<div class="node-meters">
                 <div class="node-meter-group">Eficiência<div class="meter"><div class="meter-fill" id="eff-${machine.id}"></div></div></div>
                 <div class="node-meter-group">Buffer<div class="meter"><div class="meter-fill" id="buf-${machine.id}"></div></div></div>
-            </div>`}
+            </div>
+            <div class="node-eff-bar"><div class="node-eff-fill" id="node-eff-${machine.id}"></div></div>`}
         </div>
         <button class="context-action" id="action-${machine.id}" onclick="handleMachineAction(${machine.id})">Ação</button>
         <button class="delete-btn" onclick="deleteMachine(${machine.id})">×</button>
@@ -780,6 +781,11 @@ function updateMachineNodeVisual(machine, forceMetrics = false) {
     if (effFill && shouldRefreshMetrics) {
         effFill.style.width = `${Math.round(eff * 100)}%`;
         effFill.className = `meter-fill ${eff >= 0.8 ? 'good' : eff >= 0.4 ? 'partial' : 'low'}`;
+    }
+    const nodeEffFill = document.getElementById(`node-eff-${machine.id}`);
+    if (nodeEffFill && shouldRefreshMetrics) {
+        nodeEffFill.style.width = `${Math.round(eff * 100)}%`;
+        nodeEffFill.className = `node-eff-fill${eff >= 0.8 ? '' : eff >= 0.4 ? ' eff-warn' : ' eff-low'}`;
     }
 
     const isDeposito = machine.type === 'deposito';

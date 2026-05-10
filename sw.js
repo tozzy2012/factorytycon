@@ -1,4 +1,4 @@
-const CACHE = 'factory-v4';
+const CACHE = 'factory-v5';
 const ASSETS = ['/', '/index.html', '/css/styles.css', '/js/audio.js',
   '/js/core/state.js', '/js/core/engine.js', '/js/core/loop.js',
   '/js/database/machines.db.js', '/js/database/resources.db.js',

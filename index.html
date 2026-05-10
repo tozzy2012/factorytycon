@@ -16,7 +16,7 @@
     <link rel="stylesheet" href="https://unpkg.com/tippy.js@6/dist/tippy.css"/>
     <script src="https://unpkg.com/@popperjs/core@2/dist/umd/popper.min.js"></script>
     <script src="https://unpkg.com/tippy.js@6/dist/tippy.umd.min.js"></script>
-    <link rel="stylesheet" href="css/styles.css?v=19">
+    <link rel="stylesheet" href="css/styles.css?v=20">
     <link rel="stylesheet" href="css/auth.css?v=1">
 </head>
 
@@ -55,73 +55,100 @@
     <div class="app-shell">
         <!-- Top Bar Global -->
         <div class="top-bar">
-            <button class="toggle-sidebar-btn" onclick="toggleSidebar()" title="Toggle sidebar">☰</button>
-            <span class="top-bar-title" id="wsTitle">Indústria</span>
-            <div id="factoryHealthBar"
-                style="display:flex;align-items:center;gap:8px;padding:4px 12px;border:1px solid var(--border-primary);border-radius:999px;font-size:11px;color:var(--text-secondary);">
-                <span id="factoryHealthDot"
-                    style="width:8px;height:8px;border-radius:999px;background:#4ade80;flex-shrink:0;"></span>
-                <span id="factoryHealthText">Fábrica: —</span>
-                <span id="factoryEraLabel" style="color:#4ade80;font-weight:600;"></span>
-                <span id="eraProgressDebug" style="color:#f59e0b;font-size:10px;margin-left:4px;"></span>
+            <!-- Left zone: navigation -->
+            <div class="top-bar-left">
+                <button class="toggle-sidebar-btn" onclick="toggleSidebar()" title="Toggle sidebar">☰</button>
+                <span class="top-bar-title" id="wsTitle">Indústria</span>
             </div>
-            <div id="securityBar"
-                style="display:flex;align-items:center;gap:8px;padding:4px 12px;border:1px solid var(--border-primary);border-radius:999px;font-size:11px;color:var(--text-secondary);">
-                <span id="securityDot"
-                    style="width:8px;height:8px;border-radius:999px;background:#4ade80;flex-shrink:0;"></span>
-                <span id="securityText">🛡️ Segurança: 100%</span>
-            </div>
-            <!-- F: Era progress bar -->
-            <div id="eraBarWrap" style="display:flex;align-items:center;gap:6px;padding:4px 12px;border:1px solid var(--border-primary);border-radius:999px;font-size:11px;color:var(--text-secondary);">
-                <span id="eraBarLabel" style="white-space:nowrap;">Era 0</span>
-                <div style="width:80px;height:6px;background:rgba(255,255,255,0.1);border-radius:3px;overflow:hidden;">
-                    <div id="eraBarFill" style="height:100%;width:0%;background:var(--accent-green);border-radius:3px;transition:width 0.4s ease;"></div>
+
+            <!-- Center zone: HUD stats -->
+            <div class="top-bar-hud">
+                <!-- Era progress -->
+                <div class="hud-stat" data-tippy-content="Era atual e progresso para a próxima. Construa mais máquinas para avançar.">
+                    <div class="hud-stat-body">
+                        <span class="hud-stat-value" id="eraBarLabel">Era 0</span>
+                        <div class="hud-era-bar"><div class="hud-era-fill" id="eraBarFill" style="width:0%"></div></div>
+                    </div>
                 </div>
-                <span id="eraBarPct" style="color:var(--accent-gold);font-size:10px;">0%</span>
+
+                <div class="hud-divider"></div>
+
+                <!-- Game time -->
+                <div class="hud-stat" data-tippy-content="Dia e hora de jogo. 1 dia = 2 min reais.">
+                    <span class="hud-stat-icon" id="hud-time-icon">🌅</span>
+                    <div class="hud-stat-body">
+                        <span class="hud-stat-value" id="hud-day-text">Dia 1</span>
+                        <span class="hud-stat-label">Tempo</span>
+                    </div>
+                </div>
+
+                <!-- Population -->
+                <div class="hud-stat" id="hud-pop" data-tippy-content="Moradores atuais / capacidade de moradia. Construa casas para aumentar.">
+                    <span class="hud-stat-icon">👥</span>
+                    <div class="hud-stat-body">
+                        <span class="hud-stat-value" id="hud-pop-text">—/—</span>
+                        <span class="hud-stat-label">Habitantes</span>
+                    </div>
+                </div>
+
+                <!-- Workers -->
+                <div class="hud-stat" id="hud-workers" data-tippy-content="Trabalhadores livres / total. 70% dos moradores estão em idade ativa. Edifícios da cidade e fábricas consomem trabalhadores.">
+                    <span class="hud-stat-icon">🛠️</span>
+                    <div class="hud-stat-body">
+                        <span class="hud-stat-value" id="hud-workers-text">—</span>
+                        <span class="hud-stat-label">Trabalho</span>
+                    </div>
+                </div>
+
+                <!-- Happiness / Pollution -->
+                <div class="hud-stat" id="hud-social" data-tippy-content="Felicidade afeta migração. Poluição acima de 70% bloqueia novos moradores.">
+                    <span class="hud-stat-icon">😊</span>
+                    <div class="hud-stat-body">
+                        <span class="hud-stat-value"><span id="hud-happy-text">—</span><span style="opacity:0.3;margin:0 3px">·</span><span id="hud-pollution-text" style="font-size:11px">—</span>🌫️</span>
+                        <span class="hud-stat-label">Social · Poluição</span>
+                    </div>
+                </div>
+
+                <!-- Gold rate -->
+                <div class="hud-stat" data-tippy-content="Taxa de ouro por hora. Gerado pelo Mercado e impostos da cidade.">
+                    <span class="hud-stat-icon">📈</span>
+                    <div class="hud-stat-body">
+                        <span class="hud-stat-value" id="hud-gold-rate-text" style="color:var(--text-tertiary)">±0💰/h</span>
+                        <span class="hud-stat-label">Taxa/hora</span>
+                    </div>
+                </div>
+
+                <div class="hud-divider"></div>
+
+                <!-- Factory health -->
+                <div class="hud-stat" data-tippy-content="Estado geral das fábricas. Gargalos indicam produção bloqueada.">
+                    <span id="factoryHealthDot" class="hud-factory-dot"></span>
+                    <div class="hud-stat-body">
+                        <span class="hud-stat-value" id="factoryHealthText">Fábrica: —</span>
+                        <span class="hud-stat-label" id="factoryEraLabel"></span>
+                    </div>
+                </div>
+
+                <!-- Hidden compat elements (JS still updates these) -->
+                <span id="eraBarPct" style="display:none">0%</span>
+                <span id="eraProgressDebug" style="display:none"></span>
+                <span id="idleWorkersText" style="display:none">0 ociosos</span>
+                <span id="securityDot" style="display:none"></span>
+                <span id="securityText" style="display:none">🛡️ Segurança: 100%</span>
             </div>
-            <!-- E: Idle workers -->
-            <div id="idleWorkersWrap" style="display:flex;align-items:center;gap:6px;padding:4px 12px;border:1px solid var(--border-primary);border-radius:999px;font-size:11px;color:var(--text-secondary);">
-                <span>👷</span>
-                <span id="idleWorkersText">0 ociosos</span>
-            </div>
-            <!-- HUD: Tempo de Jogo -->
-            <div class="hud-chip" id="hud-time" data-tippy-content="Dia e hora de jogo. 1 dia = 2 min reais.">
-                <span id="hud-time-icon">🌅</span>
-                <span id="hud-day-text">Dia 1</span>
-            </div>
-            <!-- HUD: Populacao -->
-            <div class="hud-chip" id="hud-pop" data-tippy-content="Moradores atuais / capacidade de moradia. Construa casas para aumentar.">
-                <span>👥</span>
-                <span id="hud-pop-text">—/—</span>
-            </div>
-            <!-- HUD: Trabalhadores Disponíveis -->
-            <div class="hud-chip" id="hud-workers" data-tippy-content="Trabalhadores livres / total. 70% dos moradores estão em idade ativa. Edifícios da cidade e fábricas consomem trabalhadores.">
-                <span>🛠️</span>
-                <span id="hud-workers-text">—</span>
-            </div>
-            <!-- HUD: Felicidade e Poluição -->
-            <div class="hud-chip" id="hud-social" data-tippy-content="Felicidade afeta migração. Poluição acima de 70% bloqueia novos moradores.">
-                <span>😊</span><span id="hud-happy-text">—</span>
-                <span style="margin:0 3px;opacity:0.3">|</span>
-                <span>🌫️</span><span id="hud-pollution-text">—</span>
-            </div>
-            <!-- HUD: Taxa de Ouro -->
-            <div class="hud-chip" id="hud-gold-rate" data-tippy-content="Taxa de ouro por hora. Gerado pelo Mercado e impostos da cidade.">
-                <span id="hud-gold-rate-text" style="color:var(--text-tertiary);">±0💰/h</span>
-            </div>
-            <div class="top-bar-actions">
+
+            <!-- Right zone: controls -->
+            <div class="top-bar-right">
                 <div class="speed-controls"><button class="speed-btn active" data-speed="1" onclick="setGameSpeed(1)">1×</button><button class="speed-btn" data-speed="2" onclick="setGameSpeed(2)">2×</button><button class="speed-btn" data-speed="4" onclick="setGameSpeed(4)">4×</button></div>
                 <button class="top-btn" id="audioToggleBtn" onclick="toggleAudio()" title="Som">🔊</button>
-                                <button class="top-btn" id="zoomOutBtn" title="Zoom out">－</button>
+                <button class="top-btn" id="zoomOutBtn" title="Zoom out">－</button>
                 <span class="top-btn zoom-label" id="zoomLabel">100%</span>
                 <button class="top-btn" id="zoomInBtn" title="Zoom in">＋</button>
                 <button class="top-btn" id="fitAllBtn" title="Centralizar todas as máquinas" onclick="fitAllMachines()">⊡</button>
                 <button class="top-btn" id="productionToggleBtn" onclick="toggleProductionPanel()">📊 Produção</button>
                 <button class="top-btn top-btn-gold" id="goldTopDisplay">💰 100000</button>
-                <span id="simStatus"
-                    style="display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--border-secondary);border-radius:999px;font-size:11px;color:var(--text-secondary);">
-                    <span id="simStatusDot"
-                        style="width:8px;height:8px;border-radius:999px;background:var(--accent-green);"></span>
+                <span id="simStatus" class="sim-status">
+                    <span id="simStatusDot" class="sim-dot"></span>
                     <span id="simStatusText">20 TPS</span>
                 </span>
             </div>
@@ -322,12 +349,12 @@
     <script src="js/database/economy.db.js?v=19"></script>
     <script src="js/database/eras.db.js?v=21"></script>
     <script src="js/core/engine.js?v=22"></script>
-    <script src="js/core/loop.js?v=21"></script>
+    <script src="js/core/loop.js?v=22"></script>
     <script src="js/core/migration.js?v=1"></script>
     <script src="js/ui/canvas.js?v=19"></script>
-    <script src="js/ui/renderer.js?v=20"></script>
+    <script src="js/ui/renderer.js?v=21"></script>
     <script src="js/world/planet.js?v=18"></script>
-    <script src="js/ui/components.js?v=24"></script>
+    <script src="js/ui/components.js?v=25"></script>
     <script src="js/city/city.db.js?v=21"></script>
     <script src="js/city/city.js?v=24"></script>
     <script src="js/city/city-ui.js?v=23"></script>

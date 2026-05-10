@@ -204,7 +204,7 @@ function updateGlobalHUD() {
             (trendArrow ? '<span style="color:' + trendColor + ';font-size:11px">' + trendArrow + '</span>' : '');
         var full = gameState.city.moradores >= gameState.city.moradoresMax;
         var popChip = document.getElementById('hud-pop');
-        if (popChip) popChip.className = 'hud-chip' + (full ? ' hud-chip-warn' : '');
+        if (popChip) popChip.className = 'hud-stat' + (full ? ' hud-chip-warn' : '');
     }
 
     // ── Trabalhadores livres ──
@@ -220,9 +220,9 @@ function updateGlobalHUD() {
             workerChip.title = total + ' trabalhadores totais (70% dos ' + Math.floor(gameState.city.moradores||0) + ' moradores)\n' +
                                alocados + ' alocados (cidade + fábricas)\n' +
                                livres + ' livres';
-            if (livres < 0) workerChip.className = 'hud-chip hud-chip-danger';
-            else if (livres === 0) workerChip.className = 'hud-chip hud-chip-warn';
-            else workerChip.className = 'hud-chip';
+            if (livres < 0) workerChip.className = 'hud-stat hud-chip-danger';
+            else if (livres === 0) workerChip.className = 'hud-stat hud-chip-warn';
+            else workerChip.className = 'hud-stat';
         }
     }
 

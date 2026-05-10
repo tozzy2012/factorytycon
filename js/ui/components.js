@@ -374,7 +374,7 @@ function showInfoPanel(machine) {
     const maxPerHour = (tierDef.productionRate || 0) * 3600;
     const displayEfficiency = maxPerHour > 0 ? currentPerHour / maxPerHour : 0;
 
-    title.textContent = `${def.name} · T${machine.tier + 1}`;
+    title.textContent = `T${machine.tier + 1} · ${def.category || ''}`;
 
     const inputRows = def.inputs.includes('*')
         ? Object.keys(machine.bufferInput).map(resource => {
@@ -429,40 +429,42 @@ function showInfoPanel(machine) {
     const outFill = Math.round((Object.keys(machine.bufferOutput).reduce((a, r) => a + (machine.bufferOutput[r] || 0), 0) /
         Math.max(1, Object.keys(machine.bufferOutputMax).reduce((a, r) => a + (machine.bufferOutputMax[r] || 0), 0))) * 100);
 
+    const effPct = Math.round(displayEfficiency * 100);
+    const effClass = effPct >= 80 ? 'good' : effPct >= 40 ? 'warn' : 'bad';
+    const workersAssigned = machine.workersAssigned || 0;
+    const workersMax = def.workersMax || def.workersMin || 0;
+    const workersClass = workersMax > 0 ? (workersAssigned >= workersMax ? 'good' : workersAssigned > 0 ? 'warn' : 'bad') : '';
+
     content.innerHTML = `
-        <div class="info-section">
-            <div class="info-card">
-                <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
-                    <div style="display:flex;align-items:center;gap:10px;">
-                        <div style="width:44px;height:44px;display:grid;place-items:center;">${getMachineIcon(machine.type)}</div>
-                        <div>
-                            <div style="font-weight:600;">${def.name}</div>
-                            <div style="font-size:11px;color:var(--text-secondary);">${def.description}</div>
-                        </div>
-                    </div>
-                    <div class="status-badge ${machine.status}" style="position:static;">${machine.status.toUpperCase()}</div>
-                </div>
+        <div class="info-panel-machine-header">
+            <div class="info-panel-machine-icon">${getMachineIcon(machine.type)}</div>
+            <div style="flex:1;min-width:0;">
+                <div class="info-panel-machine-name">${def.name}</div>
+                <div class="info-panel-machine-desc">${def.description || ''}</div>
             </div>
+            <div class="status-badge ${machine.status}" style="position:static;flex-shrink:0;">${machine.status.toUpperCase()}</div>
         </div>
 
-        <div class="info-section">
-            <div class="info-card machine-metrics-grid">
-                <div class="machine-metric">
-                    <div class="machine-metric-label">Produção atual</div>
-                    <div class="machine-metric-value">${formatDecimal(currentPerHour)} /h</div>
-                </div>
-                <div class="machine-metric">
-                    <div class="machine-metric-label">Produção máxima</div>
-                    <div class="machine-metric-value">${formatDecimal(maxPerHour)} /h</div>
-                </div>
-                <div class="machine-metric">
-                    <div class="machine-metric-label">Eficiência</div>
-                    <div class="machine-metric-value">${formatDecimal(displayEfficiency * 100)}%</div>
-                </div>
-                <div class="machine-metric">
-                    <div class="machine-metric-label">Tempo operando</div>
-                    <div class="machine-metric-value">${formatDurationCompact(machine.uptime || 0)}</div>
-                </div>
+        <div class="info-stats-grid">
+            <div class="info-stat-cell">
+                <div class="info-stat-cell-value ${effClass}">${effPct}%</div>
+                <div class="info-stat-cell-label">Eficiência</div>
+            </div>
+            <div class="info-stat-cell">
+                <div class="info-stat-cell-value">${formatDecimal(currentPerHour)}</div>
+                <div class="info-stat-cell-label">Atual/h</div>
+            </div>
+            <div class="info-stat-cell">
+                <div class="info-stat-cell-value">${formatDecimal(maxPerHour)}</div>
+                <div class="info-stat-cell-label">Máx/h</div>
+            </div>
+            <div class="info-stat-cell">
+                ${workersMax > 0
+                    ? `<div class="info-stat-cell-value ${workersClass}">${workersAssigned}/${workersMax}</div>
+                       <div class="info-stat-cell-label">Workers</div>`
+                    : `<div class="info-stat-cell-value">${formatDurationCompact(machine.uptime || 0)}</div>
+                       <div class="info-stat-cell-label">Uptime</div>`
+                }
             </div>
         </div>
 
