@@ -731,7 +731,7 @@ function updateMachineNodeVisual(machine, forceMetrics = false) {
 
     const statusForNode = machine.visualStatus || machine.status;
 
-    node.classList.remove('active', 'stopped', 'bottleneck', 'partial', 'idle');
+    node.classList.remove('active', 'stopped', 'bottleneck', 'partial', 'idle', 'sem_mao_de_obra');
     node.classList.add(statusForNode);
 
     const statusMap = {
@@ -739,7 +739,8 @@ function updateMachineNodeVisual(machine, forceMetrics = false) {
         partial: 'PARCIAL',
         stopped: 'PARADA',
         bottleneck: 'GARGALO',
-        idle: 'OCIOSA'
+        idle: 'OCIOSA',
+        sem_mao_de_obra: 'S/ PESSOAL'
     };
 
     const statusEl = document.getElementById(`status-${machine.id}`);

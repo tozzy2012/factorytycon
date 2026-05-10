@@ -118,6 +118,17 @@ function onTick(tickNumber) {
 
     if (tickNumber % TICK.AUTOSAVE_EVERY_TICKS === 0) {
         saveGameState();
+        // Atualiza taxa de ouro por hora (snapshot a cada 10s)
+        var snap = gameState.goldSnapshot;
+        if (snap) {
+            var now = Date.now();
+            var elapsed = (now - snap.ts) / 3600000; // horas
+            if (snap.ts > 0 && elapsed > 0) {
+                snap.ratePerHour = (gameState.gold - snap.value) / elapsed;
+            }
+            snap.value = gameState.gold;
+            snap.ts = now;
+        }
     }
 
     if (tickNumber % 40 === 0) {
@@ -127,6 +138,7 @@ function onTick(tickNumber) {
         if (typeof updateSecurityBar === "function") updateSecurityBar();
         updateEraBar();
         updateIdleWorkers();
+        updateGlobalHUD();
     }
 
     if (tickNumber % 100 === 0) {
@@ -160,6 +172,70 @@ function updateIdleWorkers() {
     });
     el.textContent = idle > 0 ? idle + ' ociosos' : 'todos ativos';
     el.style.color = idle > 0 ? 'var(--accent-orange)' : 'var(--accent-green)';
+}
+
+// ═══ HUD GLOBAL — Atualiza chips de status visíveis em todas as abas ═══
+function updateGlobalHUD() {
+    // ── Dia e hora de jogo ──
+    var dayEl = document.getElementById('hud-day-text');
+    var iconEl = document.getElementById('hud-time-icon');
+    if (dayEl && gameState.gameTime) {
+        var day = (gameState.gameTime.daysPassed || 0) + 1;
+        var dayLen = (typeof BALANCE !== 'undefined') ? BALANCE.GAME_DAY_REAL_SECONDS : 120;
+        var hour = Math.floor(((gameState.gameTime.secondsSinceDay || 0) / dayLen) * 24);
+        dayEl.textContent = 'Dia ' + day;
+        if (iconEl) iconEl.textContent = (hour >= 6 && hour < 18) ? '🌅' : '🌙';
+    }
+
+    // ── Populacao e moradia ──
+    var popEl = document.getElementById('hud-pop-text');
+    if (popEl && gameState.city) {
+        popEl.textContent = Math.floor(gameState.city.moradores) + '/' + gameState.city.moradoresMax;
+        var full = gameState.city.moradores >= gameState.city.moradoresMax;
+        var popChip = document.getElementById('hud-pop');
+        if (popChip) popChip.className = 'hud-chip' + (full ? ' hud-chip-warn' : '');
+    }
+
+    // ── Trabalhadores livres ──
+    var workEl = document.getElementById('hud-workers-text');
+    if (workEl && gameState.city) {
+        var livres = gameState.city.trabalhadores ? (gameState.city.trabalhadores.livres || 0) : 0;
+        workEl.textContent = livres + ' livres';
+        var workerChip = document.getElementById('hud-workers');
+        if (workerChip) {
+            if (livres < 0) workerChip.className = 'hud-chip hud-chip-danger';
+            else if (livres === 0) workerChip.className = 'hud-chip hud-chip-warn';
+            else workerChip.className = 'hud-chip';
+        }
+    }
+
+    // ── Felicidade e Poluicao ──
+    var happyEl = document.getElementById('hud-happy-text');
+    var pollEl  = document.getElementById('hud-pollution-text');
+    if (happyEl && gameState.city) {
+        var h = Math.round(gameState.city.felicidade || 0);
+        happyEl.textContent = h + '%';
+        happyEl.style.color = h > 70 ? '#4ade80' : h > 40 ? '#facc15' : '#f87171';
+    }
+    if (pollEl) {
+        var p = Math.round(gameState.pollutionLevel || 0);
+        pollEl.textContent = p + '%';
+        pollEl.style.color = p > 50 ? '#f87171' : p > 30 ? '#facc15' : 'var(--text-tertiary)';
+    }
+
+    // ── Taxa de ouro por hora ──
+    var rateEl = document.getElementById('hud-gold-rate-text');
+    if (rateEl && gameState.goldSnapshot) {
+        var rate = Math.round(gameState.goldSnapshot.ratePerHour || 0);
+        if (Math.abs(rate) > 0) {
+            var sign = rate > 0 ? '+' : '';
+            rateEl.textContent = sign + rate.toLocaleString('pt-BR') + '💰/h';
+            rateEl.style.color = rate > 0 ? '#4ade80' : '#f87171';
+        } else {
+            rateEl.textContent = '±0💰/h';
+            rateEl.style.color = 'var(--text-tertiary)';
+        }
+    }
 }
 
 // ═══ CICLO DO AMANHECER ═══════════════════════════════════════════════════════
@@ -196,7 +272,10 @@ function _onNewDay(dayNumber) {
         updateGoldDisplay();
     }
 
-    // 4. Dispara evento para outros módulos escutarem
+    // 4. Motor de migração — gera log e mensagem do ticker
+    if (typeof runMigrationCheck === 'function') runMigrationCheck();
+
+    // 5. Dispara evento para outros módulos escutarem
     document.dispatchEvent(new CustomEvent('game:newDay', { detail: { day: dayNumber, city: city } }));
 }
 

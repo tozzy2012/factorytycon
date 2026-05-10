@@ -10,7 +10,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/styles.css?v=16">
+    <link rel="stylesheet" href="css/styles.css?v=17">
     <link rel="stylesheet" href="css/auth.css?v=1">
 </head>
 
@@ -78,6 +78,31 @@
                 <span>👷</span>
                 <span id="idleWorkersText">0 ociosos</span>
             </div>
+            <!-- HUD: Tempo de Jogo -->
+            <div class="hud-chip" id="hud-time">
+                <span id="hud-time-icon">🌅</span>
+                <span id="hud-day-text">Dia 1</span>
+            </div>
+            <!-- HUD: Populacao -->
+            <div class="hud-chip" id="hud-pop">
+                <span>👥</span>
+                <span id="hud-pop-text">—/—</span>
+            </div>
+            <!-- HUD: Trabalhadores Disponíveis -->
+            <div class="hud-chip" id="hud-workers">
+                <span>🛠️</span>
+                <span id="hud-workers-text">—</span>
+            </div>
+            <!-- HUD: Felicidade e Poluição -->
+            <div class="hud-chip" id="hud-social">
+                <span>😊</span><span id="hud-happy-text">—</span>
+                <span style="margin:0 3px;opacity:0.3">|</span>
+                <span>🌫️</span><span id="hud-pollution-text">—</span>
+            </div>
+            <!-- HUD: Taxa de Ouro -->
+            <div class="hud-chip" id="hud-gold-rate">
+                <span id="hud-gold-rate-text" style="color:var(--text-tertiary);">±0💰/h</span>
+            </div>
             <div class="top-bar-actions">
                 <div class="speed-controls"><button class="speed-btn active" data-speed="1" onclick="setGameSpeed(1)">1×</button><button class="speed-btn" data-speed="2" onclick="setGameSpeed(2)">2×</button><button class="speed-btn" data-speed="4" onclick="setGameSpeed(4)">4×</button></div>
                 <button class="top-btn" id="audioToggleBtn" onclick="toggleAudio()" title="Som">🔊</button>
@@ -93,6 +118,12 @@
                     <span id="simStatusText">20 TPS</span>
                 </span>
             </div>
+        </div>
+
+        <!-- News Ticker -->
+        <div class="news-ticker news-ticker-neutral" id="newsTicker">
+            <span class="news-ticker-icon">🏭</span>
+            <span class="news-ticker-text" id="newsTickerText">Bem-vindo ao Industrial Pipeline!</span>
         </div>
 
         <!-- Container para sidebar + workspaces -->
@@ -274,23 +305,25 @@
 
 
     <!-- Scripts: State -> Database -> Core -> UI -> World -->
-    <script src="js/audio.js?v=16"></script>
-    <script src="assets/svg/icons.js?v=16"></script>
-    <script src="js/core/state.js?v=16"></script>
+    <script src="js/audio.js?v=17"></script>
+    <script src="assets/svg/icons.js?v=17"></script>
+    <script src="js/core/state.js?v=17"></script>
     <script src="js/database/balance.db.js?v=1"></script>
-    <script src="js/database/machines.db.js?v=16"></script>
-    <script src="js/database/resources.db.js?v=16"></script>
-    <script src="js/database/economy.db.js?v=16"></script>
-    <script src="js/database/eras.db.js?v=16"></script>
-    <script src="js/core/engine.js?v=16"></script>
-    <script src="js/core/loop.js?v=16"></script>
-    <script src="js/ui/canvas.js?v=16"></script>
-    <script src="js/ui/renderer.js?v=16"></script>
-    <script src="js/world/planet.js?v=16"></script>
-    <script src="js/ui/components.js?v=16"></script>
-    <script src="js/city/city.db.js?v=16"></script>
-    <script src="js/city/city.js?v=16"></script>
-    <script src="js/city/city-ui.js?v=16"></script>
+    <script src="js/database/migration.db.js?v=1"></script>
+    <script src="js/database/machines.db.js?v=17"></script>
+    <script src="js/database/resources.db.js?v=17"></script>
+    <script src="js/database/economy.db.js?v=17"></script>
+    <script src="js/database/eras.db.js?v=17"></script>
+    <script src="js/core/engine.js?v=17"></script>
+    <script src="js/core/loop.js?v=17"></script>
+    <script src="js/core/migration.js?v=1"></script>
+    <script src="js/ui/canvas.js?v=17"></script>
+    <script src="js/ui/renderer.js?v=17"></script>
+    <script src="js/world/planet.js?v=17"></script>
+    <script src="js/ui/components.js?v=17"></script>
+    <script src="js/city/city.db.js?v=17"></script>
+    <script src="js/city/city.js?v=17"></script>
+    <script src="js/city/city-ui.js?v=17"></script>
     <script src="js/api.js?v=2"></script>
     <script src="js/auth.js?v=2"></script>
     <script>

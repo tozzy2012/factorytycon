@@ -1262,6 +1262,7 @@ async function init() {
     initWorldMap();
     initPlanetControls();
     startGameLoop();
+    if (typeof initTicker === 'function') initTicker();
     showWelcomeMessage();
     updateGoldDisplay();
     updateSimulationStatusIndicator();

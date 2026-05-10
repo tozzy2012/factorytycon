@@ -777,6 +777,16 @@ function updateSimulation() {
     updateMachineUI();
     updateGoldDisplay();
     checkEraProgression();
+
+    // ── Gargalo Humano: sobrescreve status para maquinas sem trabalhadores ──
+    gameState.machines.forEach(function(machine) {
+        var def = machineTypes[machine.type];
+        if (!def || !(def.workersMin > 0)) return;
+        var wEff = machine._effectiveWorkers != null ? machine._effectiveWorkers : (machine.workersAssigned || 0);
+        if (wEff === 0 && machine.status !== 'active' && machine.status !== 'bottleneck') {
+            machine.status = 'sem_mao_de_obra';
+        }
+    });
 }
 function spawnGoldFloat(mercado, amount) {
     // Find the DOM node of the mercado machine to anchor the float

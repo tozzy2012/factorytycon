@@ -28,6 +28,8 @@ window.gameState = {
     stats: { playTime: 0, firstSale: false },
     gameTime: { daysPassed: 0, secondsSinceDay: 0 },
     laborShortage: false,
+    population: { growthLog: [], migrationRate: 0, employmentRate: 0 },
+    goldSnapshot: { value: 1500, ts: 0, ratePerHour: 0 },
     tickStats: {
         totalTicks: 0,
         simulationRuns: 0,
