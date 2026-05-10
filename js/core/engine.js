@@ -66,7 +66,7 @@ function ensureMachineShape(machine) {
     machine.totalProduced = machine.totalProduced || {};
     machine.uptime = machine.uptime || 0;
     machine.effHistory = machine.effHistory || [];
-    machine.workersAssigned = machine.workersAssigned ?? (def.workersMin || 0);
+    machine.workersAssigned = machine.workersAssigned ?? 0;
     machine.bottleneckTicks = machine.bottleneckTicks || 0;
 
     const tier = getTierDef(machine);
@@ -748,6 +748,7 @@ function updateSimulation() {
             const earned = qty * (marketPrices[resource] || 0);
             gameState.gold += earned;
             totalEarned += earned;
+            if (gameState.goldSource) gameState.goldSource.mercado += earned;
             mercado.bufferInput[resource] = 0;
             soldSomething = true;
         });

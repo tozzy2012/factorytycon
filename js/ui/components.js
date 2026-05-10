@@ -497,20 +497,26 @@ function showInfoPanel(machine) {
             </div>
         </div>
 
-        ${(def.workersMin > 0) ? `
+        ${(def.workersMin > 0) ? (() => {
+            const assigned = machine.workersAssigned || 0;
+            const effective = machine._effectiveWorkers ?? assigned;
+            const shortage = effective < assigned;
+            const freeWorkers = gameState.city?.trabalhadores?.livres ?? 0;
+            const maxAssignable = Math.min(def.workersMax || def.workersMin, assigned + freeWorkers);
+            return `
         <div class="info-section"><h4>⚒️ Trabalhadores</h4>
             <div class="info-card">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-                    <span style="font-size:12px;color:var(--text-secondary);">Alocados: <b style="color:var(--text-primary);" id="workers-count-${machine.id}">${machine.workersAssigned || 0}</b> / ${def.workersMax || def.workersMin}</span>
-                    <span style="font-size:11px;color:${(machine.workerFactor || 0) >= 0.9 ? '#4ade80' : (machine.workerFactor || 0) > 0 ? '#facc15' : '#f87171'};" id="workers-eff-${machine.id}">${Math.round((machine.workerFactor || 0) * 100)}% efic.</span>
+                    <span style="font-size:12px;color:var(--text-secondary);">Alocados: <b style="color:var(--text-primary);" id="workers-count-${machine.id}">${assigned}</b> / ${def.workersMax || def.workersMin}</span>
+                    <span style="font-size:11px;color:${shortage ? '#f87171' : (machine.workerFactor || 0) >= 0.9 ? '#4ade80' : '#facc15'};" id="workers-eff-${machine.id}">${shortage ? `⚠ ${effective} efetivos` : Math.round((machine.workerFactor || 0) * 100) + '% efic.'}</span>
                 </div>
                 <div style="display:flex;align-items:center;gap:8px;">
-                    <input type="range" id="workers-slider-${machine.id}" min="0" max="${def.workersMax || def.workersMin}" value="${machine.workersAssigned || 0}" style="flex:1;accent-color:#4ade80;" oninput="window.adjustWorkers(${machine.id}, null, parseInt(this.value, 10))">
+                    <input type="range" id="workers-slider-${machine.id}" min="0" max="${maxAssignable}" value="${assigned}" style="flex:1;accent-color:#4ade80;" oninput="window.adjustWorkers(${machine.id}, null, parseInt(this.value, 10))">
                 </div>
-                <div style="font-size:10px;color:var(--text-tertiary);margin-top:6px;">Min: ${def.workersMin} · Sem trabalhadores = máquina parada</div>
+                <div style="font-size:10px;color:var(--text-tertiary);margin-top:6px;">Min: ${def.workersMin} · Livres na cidade: <b style="color:${freeWorkers > 0 ? '#4ade80' : '#f87171'}">${freeWorkers}</b></div>
             </div>
-        </div>
-        ` : ''}
+        </div>`;
+        })() : ''}
 
         <div class="info-section"><h4>Diagnóstico</h4><div class="info-card" style="font-size:12px;line-height:1.45;">${getMachineDiagnostic(machine)}</div></div>
 
@@ -1606,7 +1612,6 @@ function hideTitleScreen(newGame) {
         createToolbarChips();
         populateDock('industry');
         switchWorkspace('industry');
-        setTimeout(createStarterChain, 50);
     }
     const el = document.getElementById('title-screen');
     if (el) {
@@ -1629,7 +1634,7 @@ function createStarterChain() {
     const positions = [
         { type: 'lenhador',        x: cx - 240, y: cy },
         { type: 'serraria_manual', x: cx,        y: cy },
-        { type: 'mercado',         x: cx + 240,  y: cy },
+        { type: 'deposito',        x: cx + 240,  y: cy },
     ];
     const placed = [];
     for (const { type, x, y } of positions) {
@@ -1666,7 +1671,7 @@ function createStarterChain() {
         });
     }
     updateGoldDisplay();
-    showMessage("Cadeia inicial pronta! Lenhador → Serraria → Mercado já conectados.", "success");
+    showMessage("Cadeia inicial pronta! Lenhador → Serraria → Depósito já conectados.", "success");
 }
 
 // ═══ WORKER CONTROLS ═══
@@ -1676,10 +1681,27 @@ window.adjustWorkers = function adjustWorkers(machineId, delta, absolute) {
     const maxW = def ? (def.workersMax || def.workersMin) : 0;
     const current = machine ? (machine.workersAssigned || 0) : -1;
     const newVal = (absolute !== undefined && absolute !== null) ? Number(absolute) : current + delta;
-    const result = machine ? Math.max(0, Math.min(maxW, newVal)) : -1;
 
     if (!machine) return;
     if (!def || !(def.workersMin > 0)) return;
+
+    // Cap at: machine's own workers (returnable) + city free workers
+    const freeWorkers = gameState.city?.trabalhadores?.livres ?? 999;
+    const canAssign = current + freeWorkers;
+    const result = Math.max(0, Math.min(maxW, Math.min(canAssign, newVal)));
+
+    if (result > current && result === current) {
+        // No change possible — already at cap
+    }
+
+    if (result > current && (gameState.city?.trabalhadores?.livres ?? 999) <= 0) {
+        showMessage('Sem trabalhadores livres na cidade!', 'warning');
+        // Still set slider back to current to give feedback
+        const slider = document.getElementById('workers-slider-' + machineId);
+        if (slider) slider.value = current;
+        return;
+    }
+
     machine.workersAssigned = result;
 
     // Update UI in-place without full re-render

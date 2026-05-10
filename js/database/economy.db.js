@@ -8,6 +8,6 @@ window.marketPrices = {
     'componente_eletronico': 1200,
     'explosivo_industrial': 850,
     'liga_titanio': 3500,
-    'madeira_bruta': 6,
-    'tabua_madeira': 15
+    'madeira_bruta': 1,
+    'tabua_madeira': 4
 };

@@ -302,6 +302,7 @@ function updateCity(dtSeconds) {
         const tax = (city.policies.taxRate / 100) * city.moradores * 0.1 * taxMulti * luxMulti * dtSeconds / 3600;
         gameState.gold += tax;
         city.stats.goldFromTax += tax;
+        if (gameState.goldSource) gameState.goldSource.imposto += tax;
     }
 }
 
@@ -384,6 +385,7 @@ function buildCityBuilding(type) {
     updateGoldDisplay();
     gameState.city.buildings.push({ type, id: `city-${Date.now()}`, workers_assigned: 0 });
     if (window.AudioEngine) AudioEngine.play('house');
+    updateCity(0); // recalc moradoresMax, laborShortage etc before render
     saveGameState();
     renderCityWorkspace();
     _renderBuildPanel();
@@ -395,6 +397,7 @@ function demolishCityBuilding(id) {
     if (idx < 0 || cityBuildings[gameState.city.buildings[idx].type]?.unique) return;
     gameState.city.buildings.splice(idx, 1);
     if (window.AudioEngine) AudioEngine.play('delete');
+    updateCity(0);
     saveGameState();
     renderCityWorkspace();
 }
@@ -427,6 +430,7 @@ function upgradeCityBuilding(id) {
     gameState.city.buildings[idx].type = 'insulae';
     showCityNotification('✅ Evoluído para Insulae!');
     if (window.AudioEngine) AudioEngine.play('house');
+    updateCity(0);
     saveGameState();
     renderCityWorkspace();
     _renderBuildPanel();

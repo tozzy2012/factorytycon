@@ -6,7 +6,7 @@ function renderCityWorkspace() {
 
     // Top bar chips
     _cityEl('city-pop').textContent = Math.floor(city.moradores) + ' / ' + city.moradoresMax;
-    _cityEl('city-workers-v').textContent = city.trabalhadores.livres + ' livres';
+    _cityEl('city-workers-v').textContent = (city.trabalhadores.livres||0) + '/' + (city.trabalhadores.total||0) + ' livres';
     _cityEl('city-graos-v').textContent = Math.floor(city.comida.graos || 0);
     _cityEl('city-carne-v').textContent = Math.floor(city.comida.carne || 0);
     _cityEl('city-happy-v').textContent = Math.round(city.felicidade) + '%';

@@ -128,6 +128,13 @@ function onTick(tickNumber) {
             }
             snap.value = gameState.gold;
             snap.ts = now;
+            // Snapshot goldSource rates (per hour) and reset accumulators
+            if (elapsed > 0 && gameState.goldSource) {
+                snap.mercadoRate = Math.round((gameState.goldSource.mercado || 0) / elapsed);
+                snap.impostoRate = Math.round((gameState.goldSource.imposto || 0) / elapsed);
+                gameState.goldSource.mercado = 0;
+                gameState.goldSource.imposto = 0;
+            }
         }
     }
 
@@ -199,10 +206,16 @@ function updateGlobalHUD() {
     // ── Trabalhadores livres ──
     var workEl = document.getElementById('hud-workers-text');
     if (workEl && gameState.city) {
-        var livres = gameState.city.trabalhadores ? (gameState.city.trabalhadores.livres || 0) : 0;
-        workEl.textContent = livres + ' livres';
+        var trab = gameState.city.trabalhadores || {};
+        var livres  = trab.livres  || 0;
+        var total   = trab.total   || 0;
+        var alocados = trab.alocados || 0;
+        workEl.textContent = livres + '/' + total + ' livres';
         var workerChip = document.getElementById('hud-workers');
         if (workerChip) {
+            workerChip.title = total + ' trabalhadores totais (70% dos ' + Math.floor(gameState.city.moradores||0) + ' moradores)\n' +
+                               alocados + ' alocados (cidade + fábricas)\n' +
+                               livres + ' livres';
             if (livres < 0) workerChip.className = 'hud-chip hud-chip-danger';
             else if (livres === 0) workerChip.className = 'hud-chip hud-chip-warn';
             else workerChip.className = 'hud-chip';
@@ -227,9 +240,14 @@ function updateGlobalHUD() {
     var rateEl = document.getElementById('hud-gold-rate-text');
     if (rateEl && gameState.goldSnapshot) {
         var rate = Math.round(gameState.goldSnapshot.ratePerHour || 0);
+        var snap = gameState.goldSnapshot;
+        var parts = [];
+        if ((snap.mercadoRate || 0) > 0) parts.push('Mercado: +' + snap.mercadoRate.toLocaleString('pt-BR'));
+        if ((snap.impostoRate || 0) > 0) parts.push('Imposto: +' + snap.impostoRate.toLocaleString('pt-BR'));
+        var srcLabel = parts.length > 0 ? ' (' + parts.join(', ') + ')' : '';
         if (Math.abs(rate) > 0) {
             var sign = rate > 0 ? '+' : '';
-            rateEl.textContent = sign + rate.toLocaleString('pt-BR') + '💰/h';
+            rateEl.textContent = sign + rate.toLocaleString('pt-BR') + '💰/h' + srcLabel;
             rateEl.style.color = rate > 0 ? '#4ade80' : '#f87171';
         } else {
             rateEl.textContent = '±0💰/h';

@@ -31,6 +31,7 @@ window.gameState = {
     laborShortage: false,
     population: { growthLog: [], migrationRate: 0, employmentRate: 0 },
     goldSnapshot: { value: 1500, ts: 0, ratePerHour: 0 },
+    goldSource: { mercado: 0, imposto: 0, bonus: 0 },
     tickStats: {
         totalTicks: 0,
         simulationRuns: 0,

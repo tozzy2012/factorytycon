@@ -109,6 +109,7 @@
                                 <button class="top-btn" id="zoomOutBtn" title="Zoom out">－</button>
                 <span class="top-btn zoom-label" id="zoomLabel">100%</span>
                 <button class="top-btn" id="zoomInBtn" title="Zoom in">＋</button>
+                <button class="top-btn" id="fitAllBtn" title="Centralizar todas as máquinas" onclick="fitAllMachines()">⊡</button>
                 <button class="top-btn" id="productionToggleBtn" onclick="toggleProductionPanel()">📊 Produção</button>
                 <button class="top-btn top-btn-gold" id="goldTopDisplay">💰 100000</button>
                 <span id="simStatus"
@@ -307,23 +308,23 @@
     <!-- Scripts: State -> Database -> Core -> UI -> World -->
     <script src="js/audio.js?v=18"></script>
     <script src="assets/svg/icons.js?v=18"></script>
-    <script src="js/core/state.js?v=19"></script>
+    <script src="js/core/state.js?v=20"></script>
     <script src="js/database/balance.db.js?v=20"></script>
     <script src="js/database/migration.db.js?v=1"></script>
-    <script src="js/database/machines.db.js?v=21"></script>
+    <script src="js/database/machines.db.js?v=22"></script>
     <script src="js/database/resources.db.js?v=20"></script>
-    <script src="js/database/economy.db.js?v=18"></script>
+    <script src="js/database/economy.db.js?v=19"></script>
     <script src="js/database/eras.db.js?v=20"></script>
-    <script src="js/core/engine.js?v=19"></script>
-    <script src="js/core/loop.js?v=18"></script>
+    <script src="js/core/engine.js?v=21"></script>
+    <script src="js/core/loop.js?v=20"></script>
     <script src="js/core/migration.js?v=1"></script>
-    <script src="js/ui/canvas.js?v=18"></script>
+    <script src="js/ui/canvas.js?v=19"></script>
     <script src="js/ui/renderer.js?v=19"></script>
     <script src="js/world/planet.js?v=18"></script>
-    <script src="js/ui/components.js?v=20"></script>
+    <script src="js/ui/components.js?v=22"></script>
     <script src="js/city/city.db.js?v=20"></script>
-    <script src="js/city/city.js?v=21"></script>
-    <script src="js/city/city-ui.js?v=21"></script>
+    <script src="js/city/city.js?v=23"></script>
+    <script src="js/city/city-ui.js?v=22"></script>
     <script src="js/api.js?v=2"></script>
     <script src="js/auth.js?v=2"></script>
     <script>

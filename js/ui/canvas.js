@@ -176,3 +176,41 @@ function getWorldPos(element) {
         y: (rect.top - canvasRect.top + canvas.scrollTop) / zoom
     };
 }
+
+function fitAllMachines() {
+    const machines = gameState.machines.filter(m => !m._defense);
+    if (machines.length === 0) return;
+    const canvas = document.getElementById('canvas');
+    if (!canvas) return;
+
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    machines.forEach(m => {
+        minX = Math.min(minX, m.x);
+        minY = Math.min(minY, m.y);
+        maxX = Math.max(maxX, m.x + 120);
+        maxY = Math.max(maxY, m.y + 80);
+    });
+    const pad = 80;
+    minX -= pad; minY -= pad; maxX += pad; maxY += pad;
+
+    const viewW = canvas.clientWidth;
+    const viewH = canvas.clientHeight;
+    const zoomX = viewW / (maxX - minX);
+    const zoomY = viewH / (maxY - minY);
+    const newZoom = Math.min(Math.max(0.3, Math.min(zoomX, zoomY)), 2);
+
+    setWorkspaceZoom('industry', newZoom);
+
+    const stage = document.getElementById('canvasStage');
+    const world = document.getElementById('canvasWorld');
+    if (stage && world) {
+        stage.style.width  = `${uiRuntime.canvasBaseWidth  * newZoom}px`;
+        stage.style.height = `${uiRuntime.canvasBaseHeight * newZoom}px`;
+        world.style.transform = `scale(${newZoom})`;
+        const label = document.getElementById('zoomLabel');
+        if (label) label.textContent = Math.round(newZoom * 100) + '%';
+    }
+
+    canvas.scrollLeft = minX * newZoom;
+    canvas.scrollTop  = minY * newZoom;
+}
