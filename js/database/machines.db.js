@@ -665,7 +665,7 @@ const _constructionOverrides = {
     captacao_agua_manual:  { gold: 150 },
     mineradora_basica:     { gold: 600 },
     // ── Processadoras Era 0: gold + tábuas (já tem acesso via lenhador + serraria) ──
-    serraria_manual:       { gold: 200,  tabua_madeira: 10 },
+    serraria_manual:       { gold: 200 },  // produz tábuas — não pode exigi-las
     caldeira_carvao:       { gold: 300,  tabua_madeira: 15 },
     maquina_vapor:         { gold: 500,  tabua_madeira: 20 },
     britador_mecanico:     { gold: 800,  tabua_madeira: 15 },
