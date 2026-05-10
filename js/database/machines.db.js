@@ -659,15 +659,18 @@ window.FLOW_RESOURCES = new Set([
 
 // ═══ constructionCost — Custo de construção unificado ════════════════════════
 const _constructionOverrides = {
-    lenhador:              { gold: 100,  tabua_madeira: 5  },
+    // ── Extratoras Era 0: SÓ gold (são a fonte dos recursos — não podem exigir recursos) ──
+    lenhador:              { gold: 100 },
+    mina_carvao_basica:    { gold: 600 },
+    captacao_agua_manual:  { gold: 150 },
+    mineradora_basica:     { gold: 600 },
+    // ── Processadoras Era 0: gold + tábuas (já tem acesso via lenhador + serraria) ──
     serraria_manual:       { gold: 200,  tabua_madeira: 10 },
-    captacao_agua_manual:  { gold: 150,  tabua_madeira: 8  },
     caldeira_carvao:       { gold: 300,  tabua_madeira: 15 },
     maquina_vapor:         { gold: 500,  tabua_madeira: 20 },
-    mina_carvao_basica:    { gold: 600,  tabua_madeira: 10 },
-    britador_mecanico:     { gold: 800,  tabua_madeira: 15, madeira_bruta: 20 },
-    mineradora_basica:     { gold: 600,  tabua_madeira: 12 },
-    alto_forno:            { gold: 2000, tabua_madeira: 50, madeira_bruta: 100 },
+    britador_mecanico:     { gold: 800,  tabua_madeira: 15 },
+    // ── Era 1+ ──
+    alto_forno:            { gold: 2000, tabua_madeira: 50 },
     aciaria:               { gold: 1800, tabua_madeira: 40 },
     laminador:             { gold: 1200, tabua_madeira: 30 },
     flotacao:              { gold: 1000, tabua_madeira: 20 },
@@ -677,7 +680,10 @@ const _constructionOverrides = {
         var key = e[0], def = e[1];
         if (_constructionOverrides[key]) { def.constructionCost = _constructionOverrides[key]; return; }
         var base = { gold: def.cost || 0 };
-        if ((def.workersMin || 0) > 0) base.tabua_madeira = def.workersMin * 5;
+        // Só adiciona custo de recursos em máquinas que TÊM inputs (processadoras)
+        // Extratoras (inputs=[]) nunca exigem recursos para construir
+        var hasInputs = Array.isArray(def.inputs) && def.inputs.length > 0;
+        if (hasInputs && (def.workersMin || 0) > 0) base.tabua_madeira = def.workersMin * 5;
         def.constructionCost = base;
     });
 })();
