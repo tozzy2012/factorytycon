@@ -511,9 +511,9 @@ function showInfoPanel(machine) {
                     <span style="font-size:11px;color:${shortage ? '#f87171' : (machine.workerFactor || 0) >= 0.9 ? '#4ade80' : '#facc15'};" id="workers-eff-${machine.id}">${shortage ? `⚠ ${effective} efetivos` : Math.round((machine.workerFactor || 0) * 100) + '% efic.'}</span>
                 </div>
                 <div style="display:flex;align-items:center;gap:8px;">
-                    <input type="range" id="workers-slider-${machine.id}" min="0" max="${maxAssignable}" value="${assigned}" style="flex:1;accent-color:#4ade80;" oninput="window.adjustWorkers(${machine.id}, null, parseInt(this.value, 10))">
+                    <input type="range" id="workers-slider-${machine.id}" min="0" max="${def.workersMax || def.workersMin}" value="${assigned}" style="flex:1;accent-color:#4ade80;" oninput="window.adjustWorkers(${machine.id}, null, parseInt(this.value, 10))">
                 </div>
-                <div style="font-size:10px;color:var(--text-tertiary);margin-top:6px;">Min: ${def.workersMin} · Livres na cidade: <b style="color:${freeWorkers > 0 ? '#4ade80' : '#f87171'}">${freeWorkers}</b></div>
+                <div style="font-size:10px;color:var(--text-tertiary);margin-top:6px;">Min: ${def.workersMin} · Livres na cidade: <b id="workers-livres-${machine.id}" style="color:${freeWorkers > 0 ? '#4ade80' : '#f87171'}">${freeWorkers}</b></div>
             </div>
         </div>`;
         })() : ''}
@@ -1713,6 +1713,16 @@ window.adjustWorkers = function adjustWorkers(machineId, delta, absolute) {
     if (minusBtn) minusBtn.disabled = machine.workersAssigned <= 0;
     const plusBtn = document.getElementById('workers-plus-' + machineId);
     if (plusBtn) plusBtn.disabled = machine.workersAssigned >= maxW;
+
+    // Trigger city recalc so livres updates immediately, then refresh live fields
+    if (typeof updateCity === 'function') updateCity(0);
+    // Update the "Livres na cidade" label in the open panel
+    const livresEl = document.getElementById('workers-livres-' + machineId);
+    if (livresEl) {
+        const livresNow = gameState.city?.trabalhadores?.livres ?? 0;
+        livresEl.textContent = livresNow;
+        livresEl.style.color = livresNow > 0 ? '#4ade80' : '#f87171';
+    }
 };
 
 // ═══ AUDIO TOGGLE ═══

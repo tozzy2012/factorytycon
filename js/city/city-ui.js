@@ -77,11 +77,16 @@ function renderCityWorkspace() {
     const taxLbl = document.getElementById('city-tax-val');
     if (taxLbl) taxLbl.textContent = (city.policies?.taxRate || 0) + '%';
 
-    // Industry workers
+    // Workers breakdown
     const indW = getTotalIndustryWorkers();
-    _cityEl('city-indworkers-v').textContent = indW.assigned + ' alocados';
+    const cityWorkersUsed = (city.trabalhadores.total||0) - (city.trabalhadores.livres||0) - indW.assigned;
+    const totalAllocated = city.trabalhadores.alocados || 0;
+    _cityEl('city-indworkers-v').textContent = totalAllocated + ' / ' + (city.trabalhadores.total||0);
     const indChip = document.getElementById('city-indworkers-chip');
-    if (indChip) indChip.className = 'city-stat-chip' + (city.trabalhadores.livres < 0 ? ' danger' : '');
+    if (indChip) {
+        indChip.className = 'city-stat-chip' + (city.trabalhadores.livres <= 0 ? ' danger' : '');
+        indChip.title = 'Fábricas: ' + indW.assigned + '  |  Edifícios da cidade: ' + Math.max(0, cityWorkersUsed) + '  |  Livres: ' + (city.trabalhadores.livres||0);
+    }
 
     // Migration log
     const logEl = document.getElementById('city-migration-log');
@@ -274,9 +279,9 @@ function initCityWorkspaceUI() {
                 <span class="city-stat-chip-value" id="city-pesq-v">0 pts</span>
             </div>
 
-            <div class="city-stat-chip" id="city-indworkers-chip">
-                <span class="city-stat-chip-icon">🏭</span>
-                <span class="city-stat-chip-label">Ind.</span>
+            <div class="city-stat-chip" id="city-indworkers-chip" title="Trabalhadores alocados / total disponível">
+                <span class="city-stat-chip-icon">⚒️</span>
+                <span class="city-stat-chip-label">Trabalho</span>
                 <span class="city-stat-chip-value" id="city-indworkers-v">0</span>
             </div>
         </div>
