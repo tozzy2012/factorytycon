@@ -3763,3 +3763,33 @@ body { background: #0B0F19; }
     text-overflow: ellipsis;
     white-space: nowrap;
 }
+
+/* ═══ PERF FIX v23: Remove GPU compositing overload ═══ */
+
+/* MAIN FIX: Remove filter transition from connection lines.
+   Neon class changes every 200ms — animating filter was forcing
+   full GPU layer recompose on every change = screen trembling. */
+.connection-line { transition: opacity 0.2s, stroke-width 0.2s; }
+
+/* Reduce neon to single drop-shadow (was double) */
+.connection-line.neon-flowing { filter: drop-shadow(0 0 4px rgba(96,165,250,0.55)); }
+.connection-line.neon-gold-c  { filter: drop-shadow(0 0 5px rgba(240,180,41,0.60)); }
+.connection-line.neon-blue-c  { filter: drop-shadow(0 0 5px rgba(56,189,248,0.60)); }
+.connection-line.neon-green-c { filter: drop-shadow(0 0 5px rgba(52,211,153,0.60)); }
+.connection-line.neon-orange-c{ filter: drop-shadow(0 0 5px rgba(251,146,60,0.60)); }
+.connection-line.neon-purple-c{ filter: drop-shadow(0 0 5px rgba(167,139,250,0.60)); }
+.connection-line.neon-gray-c  { filter: drop-shadow(0 0 3px rgba(148,163,184,0.40)); }
+
+/* Remove will-change from dock chips (creates 1 GPU layer per chip = 15+ layers) */
+.dock-chip { will-change: auto; }
+
+/* Prevent CSS transition fighting GSAP transforms on dock chips */
+.dock-chip {
+    transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+
+/* Reduce particle filter (updates every frame at 60fps) */
+.particle { filter: drop-shadow(0 0 4px white); }
+
+/* Isolate canvas into its own GPU layer to decouple from backdrop-filter repaint */
+.canvas-container { isolation: isolate; }

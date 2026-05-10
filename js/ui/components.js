@@ -1256,29 +1256,13 @@ function showMessage(text, type = 'success') {
 function initDockMagnification() {
     const dock = document.getElementById('dockChips');
     if (!dock || typeof gsap === 'undefined') return;
-    // Remove previous listeners by cloning
-    const fresh = dock.cloneNode(true);
-    dock.parentNode.replaceChild(fresh, dock);
 
-    // Re-attach drag listeners to cloned chips
-    const newDock = document.getElementById('dockChips');
-    newDock.querySelectorAll('.dock-chip').forEach(chip => {
-        const type = chip.dataset.machineType;
-        if (!type) return;
-        chip.addEventListener('dragstart', (e) => {
-            e.dataTransfer.effectAllowed = 'copy';
-            e.dataTransfer.setData('machineType', type);
-        });
-        chip.addEventListener('click', () => {
-            const existing = document.querySelector('.machine-chip.build-selected');
-            if (existing) existing.classList.remove('build-selected');
-            chip.classList.toggle('build-selected');
-            uiRuntime.buildMode = chip.classList.contains('build-selected') ? type : null;
-        });
-    });
+    // Remove old listeners safely (no cloneNode = no DOM rebuild)
+    if (dock._magMove)  dock.removeEventListener('mousemove',  dock._magMove);
+    if (dock._magLeave) dock.removeEventListener('mouseleave', dock._magLeave);
 
-    newDock.addEventListener('mousemove', function(e) {
-        const chips = Array.from(newDock.querySelectorAll('.dock-chip:not(.era-locked)'));
+    dock._magMove = function(e) {
+        const chips = Array.from(dock.querySelectorAll('.dock-chip:not(.era-locked)'));
         if (!chips.length) return;
         chips.forEach(chip => {
             const rect = chip.getBoundingClientRect();
@@ -1287,20 +1271,21 @@ function initDockMagnification() {
             const maxDist = 110;
             if (dist < maxDist) {
                 const t = 1 - dist / maxDist;
-                const scale = 1 + 0.6 * t * t;
-                const y = -26 * t * t;
-                gsap.to(chip, { scale, y, duration: 0.15, ease: 'power2.out', overwrite: true });
+                gsap.to(chip, { scale: 1 + 0.6 * t * t, y: -26 * t * t, duration: 0.15, ease: 'power2.out', overwrite: true });
             } else {
                 gsap.to(chip, { scale: 1, y: 0, duration: 0.2, ease: 'power2.out', overwrite: true });
             }
         });
-    });
+    };
 
-    newDock.addEventListener('mouseleave', function() {
-        newDock.querySelectorAll('.dock-chip').forEach(chip => {
+    dock._magLeave = function() {
+        dock.querySelectorAll('.dock-chip').forEach(chip => {
             gsap.to(chip, { scale: 1, y: 0, duration: 0.45, ease: 'elastic.out(1, 0.4)', overwrite: true });
         });
-    });
+    };
+
+    dock.addEventListener('mousemove',  dock._magMove);
+    dock.addEventListener('mouseleave', dock._magLeave);
 }
 
 function updateGoldDisplay() {
