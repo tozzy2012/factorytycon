@@ -232,9 +232,18 @@ function validateConnection(fromMachine, toMachine, hintResource = null) {
     const fromDef = machineTypes[fromMachine.type];
     const toDef = machineTypes[toMachine.type];
 
+    if (fromMachine.type === 'deposito') {
+        if (!toDef.inputs.length || toDef.inputs[0] === '*') return `${toDef.name} não pode receber do Depósito.`;
+        const resource = hintResource || getCompatibleResource(fromMachine, toMachine);
+        if (!resource) return 'Nenhum recurso compatível disponível.';
+        const alreadyExists = gameState.connections.find(c => c.from === fromMachine.id && c.to === toMachine.id && c.resource === resource);
+        if (alreadyExists) return `Já existe conexão de ${getResourceName(resource)} entre essas máquinas.`;
+        return null;
+    }
+
     // If a specific port was targeted, validate that resource specifically
     if (hintResource) {
-        if (!fromDef.outputs.includes(hintResource)) {
+        if (!fromDef.outputs.includes(hintResource) && fromDef.outputs[0] !== '*') {
             const outNames = fromDef.outputs.map(r => getResourceName(r)).join(', ') || '—';
             return `${machineTypes[fromMachine.type].name} não produz ${getResourceName(hintResource)}. Produz: [${outNames}].`;
         }
@@ -292,7 +301,7 @@ function renderMachine(machine) {
     `).join('') : '';
 
     const outputPorts = !isHub ? machineDef.outputs.map((resource, i) => `
-        <div class="port output" data-machine="${machine.id}" data-type="output" data-resource="${resource}" style="--port-y:${calcPortY(i, machineDef.outputs.length)}" title="Saída: ${getResourceName(resource)}"></div>
+        <div class="port output" data-machine="${machine.id}" data-type="output" data-resource="${resource}" style="--port-y:${calcPortY(i, machineDef.outputs.length)}" title="${resource === '*' ? 'Saída: Qualquer recurso' : 'Saída: ' + getResourceName(resource)}"></div>
     `).join('') : '';
 
     const inputSection = (!isHub && machineDef.inputs.length) ? `
@@ -306,7 +315,7 @@ function renderMachine(machine) {
             `).join('')}
         </div>` : '';
 
-    const outputSection = (!isHub && machineDef.outputs.length) ? `
+    const outputSection = (!isHub && machineDef.outputs.length && machineDef.outputs[0] !== '*') ? `
         <div class="node-section">
             <div class="node-section-title">Saídas</div>
             ${machineDef.outputs.map(resource => `
@@ -441,6 +450,11 @@ function createConnection(fromMachine, toMachine, hintResource = null, fromPortS
 
     gameState.connections.push(connection);
     gameState.resourceFlow[connection.id] = 0;
+
+    if (fromMachine.type === 'deposito') {
+        fromMachine.bufferOutput[resource] = fromMachine.bufferOutput[resource] || 0;
+        fromMachine.bufferOutputMax[resource] = Math.max(fromMachine.bufferOutputMax[resource] || 0, 500);
+    }
 
     if (toMachine.type === 'deposito') {
         ensureMachineShape(toMachine);

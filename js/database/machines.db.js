@@ -536,7 +536,7 @@ window.machineTypes = {
         cost: 400,
         era: 0,
         inputs: ['*'],
-        outputs: [],
+        outputs: ['*'],
         productionRate: 0,
         capacity: 500,
         description: 'Armazenamento universal. Aceita qualquer recurso através de uma única entrada.'

@@ -398,22 +398,18 @@ function showInfoPanel(machine) {
             `;
         }).join('') || '<p style="font-size:12px;color:var(--text-tertiary)">Sem entradas.</p>';
 
-    const depositoRows = Object.keys(machine.bufferInput)
-        .map(resource => ({ resource, qty: machine.bufferInput[resource] || 0, cap: machine.bufferInputMax[resource] || 0 }))
-        .filter(item => item.qty > 0)
+    const depositoRows = Object.entries(gameState.globalInventory || {})
+        .map(([resource, qty]) => ({ resource, qty: qty || 0 }))
+        .filter(item => item.qty > 0.0001)
         .sort((a, b) => b.qty - a.qty);
 
     const depositoMainRow = depositoRows.length
-        ? (() => {
-            const item = depositoRows[0];
-            const pct = item.cap > 0 ? Math.round((item.qty / item.cap) * 100) : 0;
-            return `
+        ? depositoRows.map(item => `
                 <div class="resource-item" style="justify-content:space-between;align-items:center;">
                     <span style="display:flex;align-items:center;gap:6px;"><span class="resource-dot" style="background:${getResourceColor(item.resource)}"></span>${getResourceName(item.resource)}</span>
-                    <span style="font-size:11px;">${formatStoredAmount(item.qty, item.resource)} (${pct}%)</span>
+                    <span style="font-size:11px;">${Math.floor(item.qty).toLocaleString('pt-BR')} un.</span>
                 </div>
-            `;
-        })()
+            `).join('')
         : '<p style="font-size:12px;color:var(--text-tertiary)">Estoque vazio.</p>';
 
     const outputRows = def.outputs.map(resource => {
@@ -471,6 +467,26 @@ function showInfoPanel(machine) {
         </div>
 
         <div class="info-section"><h4>${machine.type === 'deposito' ? 'Estoque principal' : 'Fluxo em tempo real'}</h4><div class="info-card">${machine.type === 'deposito' ? depositoMainRow : `${inputRows}<hr style="border:none;border-top:1px solid var(--border-primary);margin:8px 0;">${outputRows}`}</div></div>
+
+        ${machine.type === 'deposito' ? (() => {
+            const inRows = Object.keys(machine.inputFlow || {})
+                .filter(r => (machine.inputFlow[r] || 0) > 0.00001)
+                .sort((a,b) => (machine.inputFlow[b]||0) - (machine.inputFlow[a]||0))
+                .map(r => `<div class="resource-item" style="justify-content:space-between;align-items:center;">
+                    <span style="display:flex;align-items:center;gap:6px;"><span class="resource-dot" style="background:${getResourceColor(r)}"></span>${getResourceName(r)}</span>
+                    <span style="font-size:11px;">+${formatRatePerHour(machine.inputFlow[r], r)}</span>
+                </div>`).join('') || '<p style="font-size:12px;color:var(--text-tertiary)">Nenhuma entrada conectada.</p>';
+            const outFlow = gameState.globalInventoryOutflow || {};
+            const outRows = Object.keys(outFlow)
+                .filter(r => (outFlow[r] || 0) > 0.00001)
+                .sort((a,b) => (outFlow[b]||0) - (outFlow[a]||0))
+                .map(r => `<div class="resource-item" style="justify-content:space-between;align-items:center;">
+                    <span style="display:flex;align-items:center;gap:6px;"><span class="resource-dot" style="background:${getResourceColor(r)}"></span>${getResourceName(r)}</span>
+                    <span style="font-size:11px;">-${formatRatePerHour(outFlow[r], r)}</span>
+                </div>`).join('') || '<p style="font-size:12px;color:var(--text-tertiary)">Sem consumo ativo.</p>';
+            return `<div class="info-section"><h4>Entradas</h4><div class="info-card">${inRows}</div></div>
+                    <div class="info-section"><h4>Saídas</h4><div class="info-card">${outRows}</div></div>`;
+        })() : ''}
 
         <div class="info-section"><h4>Buffers</h4>
             <div class="info-card">

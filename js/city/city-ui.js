@@ -67,6 +67,31 @@ function renderCityWorkspace() {
         }).join('');
     }
 
+    // Migration diagnostic panel
+    const diagEl = document.getElementById('city-mig-diag');
+    const diag = city.migrationDiag;
+    if (diagEl && diag) {
+        if (!diag.growing && diag.blockers.length > 0) {
+            // Blocked — show each reason
+            diagEl.innerHTML = diag.blockers.map(b =>
+                '<div class="city-mig-blocker">⚠️ ' + b.msg + '</div>'
+            ).join('');
+            diagEl.className = 'city-mig-diag city-mig-diag-blocked';
+        } else if (diag.growing) {
+            // Growing — show queue progress + ETA
+            const etaStr = diag.etaSeconds != null
+                ? (diag.etaSeconds < 60 ? diag.etaSeconds + 's' : Math.round(diag.etaSeconds/60) + 'min')
+                : '—';
+            diagEl.innerHTML =
+                '<div style="font-size:11px;color:var(--text-secondary);margin-bottom:4px;">Próximo morador em ~' + etaStr + ' · ' + (diag.ratePerGameHour || 0).toFixed(2) + '/h de jogo</div>' +
+                '<div class="meter"><div class="meter-fill good" style="width:' + Math.min(100, diag.queuePct) + '%"></div></div>';
+            diagEl.className = 'city-mig-diag city-mig-diag-growing';
+        } else {
+            diagEl.innerHTML = '<div style="font-size:11px;color:var(--text-secondary)">Moradia lotada — sem espaço para novos moradores.</div>';
+            diagEl.className = 'city-mig-diag';
+        }
+    }
+
     // Buildings grid
     _renderCityGrid();
 }
@@ -246,7 +271,8 @@ function initCityWorkspaceUI() {
                 </div>
 
                 <div>
-                    <div class="city-section-label">Migração recente</div>
+                    <div class="city-section-label">Migração</div>
+                    <div id="city-mig-diag" class="city-mig-diag"></div>
                     <div class="city-migration-log" id="city-migration-log"></div>
                 </div>
 

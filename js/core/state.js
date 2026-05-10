@@ -14,6 +14,7 @@ window.gameState = {
     eraProgress: 0,
     totalProducedGlobal: {},
     globalInventory: {},
+    globalInventoryOutflow: {},
     activeWorkspace: 'industry',
     securityLevel: 100,
     lastSecurityTick: 0,

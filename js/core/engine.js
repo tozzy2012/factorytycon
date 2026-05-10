@@ -84,6 +84,7 @@ function ensureMachineShape(machine) {
     });
 
     def.outputs.forEach(resource => {
+        if (resource === '*') return; // wildcard — handled dynamically
         machine.bufferOutput[resource] = machine.bufferOutput[resource] || 0;
         if (FLOW_RESOURCES.has(resource)) {
             machine.bufferOutputMax[resource] = 0;
@@ -117,6 +118,12 @@ function ensureMachineShape(machine) {
             machine.bufferInput[resource] = machine.bufferInput[resource] || 0;
             machine.bufferInputMax[resource] = Math.max(machine.bufferInputMax[resource] || 0, 1000);
             machine.inputFlow[resource] = machine.inputFlow[resource] || 0;
+        });
+        // Dynamic output buffers based on output connections
+        (gameState.connections || []).filter(c => c.from === machine.id).forEach(conn => {
+            if (!conn.resource || conn.resource === '*') return;
+            machine.bufferOutput[conn.resource] = machine.bufferOutput[conn.resource] || 0;
+            machine.bufferOutputMax[conn.resource] = Math.max(machine.bufferOutputMax[conn.resource] || 0, 500);
         });
     }
 
@@ -164,6 +171,15 @@ function ensureOverlays() {
 function getCompatibleResource(fromMachine, toMachine) {
     const fromDef = machineTypes[fromMachine.type];
     const toDef = machineTypes[toMachine.type];
+
+    if (fromMachine.type === 'deposito') {
+        const alreadyConnected = new Set(
+            (gameState.connections || []).filter(c => c.from === fromMachine.id && c.to === toMachine.id).map(c => c.resource)
+        );
+        const inputs = toDef.inputs.filter(r => r !== '*' && !alreadyConnected.has(r));
+        // Prefer resources available in globalInventory
+        return inputs.find(r => (gameState.globalInventory[r] || 0) > 0) || inputs[0] || null;
+    }
 
     if (fromMachine.type === 'hub') {
         const used = new Set(
@@ -226,6 +242,7 @@ function syncDepositoCapacities() {
 
 function updateSimulation() {
     const simStepSeconds = TICK.SIMULATION_EVERY_TICKS / TICK.TPS;
+    gameState.globalInventoryOutflow = {};
     gameState.machines.forEach(machine => {
         ensureMachineShape(machine);
         Object.keys(machine.inputFlow).forEach(key => { machine.inputFlow[key] = 0; });
@@ -748,7 +765,24 @@ function updateSimulation() {
                 dep.bufferInput[resource] = 0;
             }
         });
-        const hasAny = Object.values(gameState.globalInventory).some(v => v > 0);
+        // Fill output buffers from globalInventory for connected downstream machines
+        const outConns = (gameState.connections || []).filter(c => c.from === dep.id);
+        outConns.forEach(conn => {
+            const res = conn.resource;
+            if (!res || res === '*') return;
+            const available = gameState.globalInventory[res] || 0;
+            if (available <= 0) return;
+            dep.bufferOutput[res] = dep.bufferOutput[res] || 0;
+            dep.bufferOutputMax[res] = dep.bufferOutputMax[res] || 500;
+            const space = Math.max(0, dep.bufferOutputMax[res] - dep.bufferOutput[res]);
+            const fill = Math.min(space, available);
+            if (fill > 0) {
+                dep.bufferOutput[res] += fill;
+                gameState.globalInventory[res] -= fill;
+            }
+        });
+        const hasAny = Object.values(gameState.globalInventory).some(v => v > 0)
+            || outConns.some(c => (dep.bufferOutput[c.resource] || 0) > 0);
         dep.status = hasAny ? 'active' : 'idle';
     });
 
@@ -761,6 +795,7 @@ function updateSimulation() {
         const pull = Math.min(rate * simStepSeconds, available);
         if (pull > 0) {
             gameState.globalInventory[resource] -= pull;
+            gameState.globalInventoryOutflow[resource] = (gameState.globalInventoryOutflow[resource] || 0) + pull / simStepSeconds;
             term.bufferOutput[resource] = (term.bufferOutput[resource] || 0) + pull;
             term.status = 'active';
         } else {

@@ -167,9 +167,26 @@ function updateCity(dtSeconds) {
     // ── Migration system (game-design: visible growth) ──
     city.migrationCooldown = Math.max(0, (city.migrationCooldown || 0) - dtSeconds);
 
+    // Game-time-aware growth rate: BALANCE.POPULATION.GROWTH_RATE_PER_HOUR is per GAME hour
+    const B_pop = (typeof BALANCE !== 'undefined') ? BALANCE : {};
+    const gameHourSecs = ((B_pop.GAME_DAY_REAL_SECONDS || 120) / 24); // real seconds per game hour
+    const baseGrowthPerSec = (B_pop.POPULATION?.GROWTH_RATE_PER_HOUR || 0.3) / gameHourSecs;
+    const baseDeclinePerSec = (B_pop.POPULATION?.DECLINE_RATE_PER_HOUR || 1.5) / gameHourSecs;
+
+    // Compute diagnostic blockers every tick so UI can display them
+    const _diagBlockers = [];
+    if (city.starvationTimer > C.starvationGracePeriod)  _diagBlockers.push({ id: 'starvation',  msg: 'Crise alimentar — moradores partindo' });
+    if (moradia <= 0)                                     _diagBlockers.push({ id: 'no_housing',  msg: 'Sem moradia — construa casas' });
+    if (city.moradores >= moradia && moradia > 0)         _diagBlockers.push({ id: 'full',        msg: 'Moradia lotada — construa mais casas' });
+    if (city.felicidade <= 40)                            _diagBlockers.push({ id: 'unhappy',     msg: 'Felicidade muito baixa (≤40%)' });
+    const pollutionBlock = (typeof BALANCE !== 'undefined') && (gameState.pollutionLevel || 0) >= (BALANCE.POLLUTION?.MIGRATION_BLOCK_THRESHOLD || 70);
+    if (pollutionBlock)                                   _diagBlockers.push({ id: 'pollution',   msg: 'Poluição acima de ' + Math.round(gameState.pollutionLevel) + '% — migração bloqueada' });
+
+    let migRatePerGameHour = 0;
+
     if (city.starvationTimer > C.starvationGracePeriod) {
         // Decline: people leave
-        const leaving = Math.min(city.moradores - 1, C.declineRate * dtSeconds);
+        const leaving = Math.min(city.moradores - 1, baseDeclinePerSec * dtSeconds);
         if (leaving > 0) {
             city.moradores = Math.max(1, city.moradores - leaving);
             if (city.migrationCooldown <= 0) {
@@ -177,15 +194,15 @@ function updateCity(dtSeconds) {
                 city.migrationCooldown = 15;
             }
         }
-    } else if (city.felicidade > 40 && city.moradores < moradia) {
+    } else if (city.felicidade > 40 && city.moradores < moradia && !pollutionBlock) {
         // Growth: migration waves
-        // Migration bonus from buildings like parks, hospital
         let migBonus = 0;
         city.buildings.forEach(b => {
             const def = cityBuildings[b.type];
             if (def && def.migrationBonus) migBonus += def.migrationBonus;
         });
-        const attractionRate = C.growthRate * (city.felicidade / 100) * (1 + migBonus);
+        const attractionRate = baseGrowthPerSec * (city.felicidade / 100) * (1 + migBonus);
+        migRatePerGameHour = attractionRate * gameHourSecs * (city.felicidade / 100);
         city.migrationQueue = (city.migrationQueue || 0) + attractionRate * dtSeconds;
 
         // When queue reaches 1+, a group arrives
@@ -198,7 +215,22 @@ function updateCity(dtSeconds) {
                 _showMigrationEvent(arriving);
             }
         }
+    } else {
+        city.migrationQueue = 0; // reset queue when blocked
     }
+
+    // Store diagnostic for UI
+    const _queuePct = Math.round((city.migrationQueue || 0) * 100);
+    const _etaSecs = migRatePerGameHour > 0 && _diagBlockers.length === 0
+        ? Math.round((1 - (city.migrationQueue || 0)) / (baseGrowthPerSec * (city.felicidade / 100)) )
+        : null;
+    city.migrationDiag = {
+        blockers: _diagBlockers,
+        queuePct: _queuePct,
+        etaSeconds: _etaSecs,
+        ratePerGameHour: Math.round(migRatePerGameHour * 100) / 100,
+        growing: _diagBlockers.length === 0 && city.moradores < moradia,
+    };
 
     // Cap population to housing
     city.moradores = Math.min(city.moradores, moradia);
