@@ -10,7 +10,13 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/styles.css?v=18">
+    <!-- GSAP for smooth animations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <!-- Tippy.js for tooltips -->
+    <link rel="stylesheet" href="https://unpkg.com/tippy.js@6/dist/tippy.css"/>
+    <script src="https://unpkg.com/@popperjs/core@2/dist/umd/popper.min.js"></script>
+    <script src="https://unpkg.com/tippy.js@6/dist/tippy.umd.min.js"></script>
+    <link rel="stylesheet" href="css/styles.css?v=19">
     <link rel="stylesheet" href="css/auth.css?v=1">
 </head>
 
@@ -79,28 +85,28 @@
                 <span id="idleWorkersText">0 ociosos</span>
             </div>
             <!-- HUD: Tempo de Jogo -->
-            <div class="hud-chip" id="hud-time">
+            <div class="hud-chip" id="hud-time" data-tippy-content="Dia e hora de jogo. 1 dia = 2 min reais.">
                 <span id="hud-time-icon">🌅</span>
                 <span id="hud-day-text">Dia 1</span>
             </div>
             <!-- HUD: Populacao -->
-            <div class="hud-chip" id="hud-pop">
+            <div class="hud-chip" id="hud-pop" data-tippy-content="Moradores atuais / capacidade de moradia. Construa casas para aumentar.">
                 <span>👥</span>
                 <span id="hud-pop-text">—/—</span>
             </div>
             <!-- HUD: Trabalhadores Disponíveis -->
-            <div class="hud-chip" id="hud-workers">
+            <div class="hud-chip" id="hud-workers" data-tippy-content="Trabalhadores livres / total. 70% dos moradores estão em idade ativa. Edifícios da cidade e fábricas consomem trabalhadores.">
                 <span>🛠️</span>
                 <span id="hud-workers-text">—</span>
             </div>
             <!-- HUD: Felicidade e Poluição -->
-            <div class="hud-chip" id="hud-social">
+            <div class="hud-chip" id="hud-social" data-tippy-content="Felicidade afeta migração. Poluição acima de 70% bloqueia novos moradores.">
                 <span>😊</span><span id="hud-happy-text">—</span>
                 <span style="margin:0 3px;opacity:0.3">|</span>
                 <span>🌫️</span><span id="hud-pollution-text">—</span>
             </div>
             <!-- HUD: Taxa de Ouro -->
-            <div class="hud-chip" id="hud-gold-rate">
+            <div class="hud-chip" id="hud-gold-rate" data-tippy-content="Taxa de ouro por hora. Gerado pelo Mercado e impostos da cidade.">
                 <span id="hud-gold-rate-text" style="color:var(--text-tertiary);">±0💰/h</span>
             </div>
             <div class="top-bar-actions">
@@ -319,9 +325,9 @@
     <script src="js/core/loop.js?v=21"></script>
     <script src="js/core/migration.js?v=1"></script>
     <script src="js/ui/canvas.js?v=19"></script>
-    <script src="js/ui/renderer.js?v=19"></script>
+    <script src="js/ui/renderer.js?v=20"></script>
     <script src="js/world/planet.js?v=18"></script>
-    <script src="js/ui/components.js?v=23"></script>
+    <script src="js/ui/components.js?v=24"></script>
     <script src="js/city/city.db.js?v=21"></script>
     <script src="js/city/city.js?v=24"></script>
     <script src="js/city/city-ui.js?v=23"></script>

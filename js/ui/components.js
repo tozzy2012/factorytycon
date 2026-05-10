@@ -570,6 +570,14 @@ function showInfoPanel(machine) {
     `;
 
     panel.classList.add('open');
+    // GSAP slide-in if available
+    if (typeof gsap !== 'undefined') {
+        gsap.fromTo(panel,
+            { x: 60, opacity: 0 },
+            { x: 0, opacity: 1, duration: 0.35, ease: 'power3.out' }
+        );
+    }
+    setTimeout(initTooltips, 50);
 
     // Worker events handled by document-level delegation (see init)
 }
@@ -1245,7 +1253,23 @@ function updateGoldDisplay() {
     const el = document.getElementById('goldTopDisplay');
     if (!el) return;
     if (isNaN(gameState.gold)) gameState.gold = 0;
-    el.textContent = '💰 ' + Math.floor(gameState.gold).toLocaleString('pt-BR');
+    const target = Math.floor(gameState.gold);
+    if (typeof gsap !== 'undefined' && el._goldTween) el._goldTween.kill();
+    if (typeof gsap !== 'undefined') {
+        const proxy = { val: el._lastGold ?? target };
+        el._lastGold = target;
+        el._goldTween = gsap.to(proxy, {
+            val: target,
+            duration: 0.6,
+            ease: 'power2.out',
+            onUpdate: () => {
+                el.textContent = '💰 ' + Math.floor(proxy.val).toLocaleString('pt-BR');
+            }
+        });
+    } else {
+        el._lastGold = target;
+        el.textContent = '💰 ' + target.toLocaleString('pt-BR');
+    }
 }
 
 function selectMachine(machine) {
@@ -1272,6 +1296,22 @@ function updateSecurityBar() {
     text.textContent = "🛡️ Segurança: " + Math.round(level) + "%";
 }
 
+
+// ═══ GLOBAL TOOLTIP INIT (Tippy.js) ═══
+function initTooltips() {
+    if (typeof tippy === 'undefined') return;
+    // Destroy old instances to avoid duplicates
+    document.querySelectorAll('[data-tippy-content]').forEach(el => {
+        if (el._tippy) el._tippy.destroy();
+    });
+    tippy('[data-tippy-content]', {
+        theme: 'factory',
+        placement: 'top',
+        delay: [200, 0],
+        arrow: true,
+        animation: 'shift-away',
+    });
+}
 async function init() {
     ensureMachineCatalog();
     await loadMachineIcons();
@@ -1292,6 +1332,7 @@ async function init() {
     refreshProductionRuntime();
     populateDock('industry');
     showTitleScreen();
+    setTimeout(initTooltips, 600);
 }
 
 // Toggle sidebar de máquinas (Indústria)

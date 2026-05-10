@@ -283,6 +283,9 @@ function renderMachine(machine) {
     const node = document.createElement('div');
     const isHub = machine.type === 'hub';
     node.className = `machine-node cat-${machineDef.category}${isHub ? ' hub-square' : ''}`;
+    // Status tooltip (updated in updateMachineNodeVisual)
+    const _stt = { active:'Máquina produzindo normalmente', partial:'Produção parcial — falta insumo ou trabalhadores', stopped:'Parada — sem insumos ou trabalhadores', bottleneck:'Gargalo: buffer de saída cheio. Conecte próxima máquina.', idle:'Aguardando recursos', sem_mao_de_obra:'Sem mão de obra — aloque trabalhadores' };
+    node.setAttribute('data-tippy-content', _stt[machine.status] || machineDef.name || '');
     node.id = `machine-${machine.id}`;
     node.style.left = `${machine.x - 130}px`;
     node.style.top = `${machine.y - 60}px`;
@@ -724,12 +727,21 @@ function updateConnectionVisual(connection) {
             : connection.resource;
         path.style.stroke = getResourceColor(displayResource);
     }
+    // Animated flow: active connections get flowing dash
+    path.classList.toggle('flowing', ratio > 0.1 && !path.classList.contains('flow-critical'));
 }
 
 function updateMachineNodeVisual(machine, forceMetrics = false) {
     const node = document.getElementById(`machine-${machine.id}`);
     if (!node) return;
     const def = machineTypes[machine.type];
+    // Update tooltip based on current status
+    const _stt2 = { active:'Máquina produzindo normalmente', partial:'Produção parcial — falta insumo ou trabalhadores', stopped:'Parada — sem insumos ou trabalhadores alocados', bottleneck:'Gargalo: buffer de saída 100% cheio. Conecte próxima máquina ou venda o excesso.', idle:'Aguardando recursos', sem_mao_de_obra:'Sem mão de obra — aloque trabalhadores no painel' };
+    const newTip = _stt2[machine.status] || (def?.name || '');
+    if (node.getAttribute('data-tippy-content') !== newTip) {
+        node.setAttribute('data-tippy-content', newTip);
+        if (node._tippy) node._tippy.setContent(newTip);
+    }
     const shouldRefreshMetrics = forceMetrics || (TICK.tickCount % TICK.PANEL_EVERY_TICKS === 0);
 
     if (machine.statusCandidate !== machine.status) {
