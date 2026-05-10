@@ -95,6 +95,14 @@ function updateCity(dtSeconds) {
         }
     }
 
+    // ── Worker efficiency bonus from grande_escola etc ──
+    let workerEffBonus = 0;
+    city.buildings.forEach(b => {
+        const def = cityBuildings[b.type];
+        if (def && def.workerEfficiencyBonus) workerEffBonus += def.workerEfficiencyBonus;
+    });
+    city.workerEfficiencyBonus = workerEffBonus;  // e.g. 0.15 = +15%
+
     // ── Food production ──
     city.buildings.forEach(b => {
         const def = cityBuildings[b.type];

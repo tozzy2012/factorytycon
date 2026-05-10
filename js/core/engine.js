@@ -272,6 +272,9 @@ function updateSimulation() {
             if (wEffective < wMin) workerFactor = 0;
             else if (wMax > wMin) workerFactor = 0.5 + 0.5 * ((Math.min(wEffective, wMax) - wMin) / (wMax - wMin));
         }
+        // Apply education/school efficiency bonus from city
+        const effBonus = gameState.city?.workerEfficiencyBonus || 0;
+        if (effBonus > 0 && workerFactor > 0) workerFactor = Math.min(1.5, workerFactor * (1 + effBonus));
         const maxProd = baseRate * workerFactor;
         machine.workerFactor = workerFactor;
 

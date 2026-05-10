@@ -17,7 +17,7 @@ window.ERA_DEFINITIONS = [
         id: 2,
         name: 'Era do Aço',
         description: 'Metalurgia avançada e petróleo.',
-        unlocks: ['alto_forno', 'aciaria', 'laminador', 'flotacao', 'forno_fundicao_cu', 'eletrólise', 'trefiladora', 'poco_petroleo', 'refinaria_combustivel', 'usina_oleo', 'mina_nitrato', 'planta_explosivos', 'oficina_cantaria', 'laminador_perfis', 'fabrica_vidro'],
+        unlocks: ['alto_forno', 'aciaria', 'laminador', 'flotacao', 'forno_fundicao_cu', 'eletrólise', 'trefiladora', 'poco_petroleo', 'refinaria_combustivel', 'usina_oleo', 'mina_nitrato', 'planta_explosivos', 'oficina_cantaria', 'oficina_marmore', 'laminador_perfis', 'fabrica_vidro'],
         requirement: { resource: 'ferro_gusa', amount: 200 }
     },
     {

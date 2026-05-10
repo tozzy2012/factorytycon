@@ -30,6 +30,21 @@ window.MIGRATION_FACTORS = {
             }
         },
         {
+            id: 'jobs_demand',
+            weight: 4,
+            check: function(gs) {
+                if (!gs.city) return false;
+                // Deficit of workers = factories need more hands
+                var livres = gs.city.trabalhadores?.livres ?? 0;
+                var total  = gs.city.trabalhadores?.total ?? 0;
+                return livres < 0 && total > 0;
+            },
+            getMessage: function(gs) {
+                var deficit = Math.abs(gs.city.trabalhadores?.livres || 0);
+                return '+' + Math.min(deficit, 5) + ' trabalhadores chegaram em busca de emprego!';
+            }
+        },
+        {
             id: 'housing_available',
             weight: 3,
             check: function(gs) {

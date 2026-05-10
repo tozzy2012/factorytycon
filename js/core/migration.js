@@ -54,6 +54,7 @@ function runMigrationCheck() {
 
     gs.population.growthLog.push(entry);
     if (gs.population.growthLog.length > 5) gs.population.growthLog.shift();
+    gs.population.newsLog = gs.population.growthLog;  // alias
 
     // Taxa de migração: soma dos pesos positivos menos negativos
     var posScore = activePos.reduce(function(s, f) { return s + f.weight; }, 0);

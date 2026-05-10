@@ -53,6 +53,7 @@ function getResourceName(resource) {
         'argamassa':     'Argamassa',
         'blocos_pedra':  'Blocos de Pedra',
         'pedra_polida':  'Pedra Polida',
+        'marmore_polido': 'Mármore Polido',
         'vigas_aco':     'Vigas de Aço',
         'vidro':         'Vidro'
     };
@@ -114,6 +115,7 @@ function getResourceColor(resource) {
         'argamassa':    '#b8a090',
         'blocos_pedra': '#9e9e8c',
         'pedra_polida': '#e8dcc8',
+        'marmore_polido': '#f0ead6',
         'vigas_aco':    '#5b7a8a',
         'vidro':        '#a8d8ea'
     };
@@ -256,6 +258,7 @@ window.RESOURCE_CATEGORY = {
     argamassa:    'primario',
     blocos_pedra: 'primario',
     pedra_polida: 'final',
+    marmore_polido: 'final',
     vigas_aco:    'final',
     vidro:        'final'
 };

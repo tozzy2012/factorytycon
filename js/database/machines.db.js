@@ -547,6 +547,20 @@ window.machineTypes = {
         inputRatios: { blocos_pedra: 0.5, agua_tratada: 0.15 },
         description: 'Lapida blocos de calcário em mármore polido.',
     },
+
+    'oficina_marmore': {
+        name: 'Oficina de Mármore',
+        category: 'final',
+        cost: 900,
+        era: 2,
+        inputs: ['pedra_polida', 'agua_tratada'],
+        outputs: ['marmore_polido'],
+        productionRate: 0.5,
+        workersMin: 2,
+        workersMax: 4,
+        inputRatios: { pedra_polida: 0.8, agua_tratada: 0.1 },
+        description: 'Polimento fino de mármore. Material de luxo para teatros e monumentos.',
+    },
     'laminador_perfis': {
         name: 'Laminador de Perfis',
         category: 'final',
@@ -778,6 +792,7 @@ const _constructionOverrides = {
     extratora_areia:       { gold: 300 },         // extrator de areia
     canteiro_obras:        { gold: 350, tabua_madeira: 20 },
     oficina_cantaria:      { gold: 700, blocos_pedra: 5 },
+    oficina_marmore:       { gold: 900, pedra_polida: 8 },
     laminador_perfis:      { gold: 1100, chapa_aco: 8 },
     fabrica_vidro:         { gold: 800, tijolo_barro: 10 },
     olaria_manual:         { gold: 180 },         // produz tijolos — não pode exigi-los

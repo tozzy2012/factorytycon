@@ -114,6 +114,21 @@ window.cityBuildings = {
         researchRate: 2,
         description: 'Gera pesquisa. +5 felicidade. 2 trabalhadores.',
     },
+
+    grande_escola: {
+        name: 'Grande Escola',
+        icon: '🎓',
+        category: 'educacao',
+        era: 2,
+        constructionCost: { gold: 350, tijolo_barro: 25, vidro: 15 },
+        luxuryBuilding: true,
+        civicBuilding: true,
+        workers: 3,
+        happinessBonus: 10,
+        researchRate: 5,
+        workerEfficiencyBonus: 0.15,   // +15% produção de todos os trabalhadores
+        description: 'Educação avançada. +15% eficiência de trabalhadores. +10 felicidade.',
+    },
     hospital: {
         name: 'Hospital',
         icon: '🏥',
@@ -175,7 +190,7 @@ window.cityBuildings = {
         workers: 2,
         happinessBonus: 35,
         migrationBonus: 0.6,
-        description: '+35 felicidade. Forte atração migratória. Bônus cancelado por alta poluição.',
+        description: '+35 felicidade. Forte atração migratória. Bônus cancelado por alta poluição. Use Mármore para maximizar o efeito.',
     },
     insulae: {
         name: 'Insulae (Apartamento)',

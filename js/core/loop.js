@@ -197,7 +197,11 @@ function updateGlobalHUD() {
     // ── Populacao e moradia ──
     var popEl = document.getElementById('hud-pop-text');
     if (popEl && gameState.city) {
-        popEl.textContent = Math.floor(gameState.city.moradores) + '/' + gameState.city.moradoresMax;
+        var migRate = gameState.population?.migrationRate || 0;
+        var trendArrow = migRate > 0 ? ' ↑' : migRate < -1 ? ' ↓' : '';
+        var trendColor = migRate > 0 ? '#4ade80' : migRate < -1 ? '#f87171' : '';
+        popEl.innerHTML = Math.floor(gameState.city.moradores) + '/' + gameState.city.moradoresMax +
+            (trendArrow ? '<span style="color:' + trendColor + ';font-size:11px">' + trendArrow + '</span>' : '');
         var full = gameState.city.moradores >= gameState.city.moradoresMax;
         var popChip = document.getElementById('hud-pop');
         if (popChip) popChip.className = 'hud-chip' + (full ? ' hud-chip-warn' : '');
