@@ -102,7 +102,34 @@ window.machineTypes = {
         description: 'Extração manual assistida por vapor. O início de tudo.'
     },
 
-    'filtro_mecanico': {
+    'poco_argila': {
+        name: 'Poço de Argila',
+        category: 'minerio',
+        cost: 120,
+        era: 0,
+        inputs: [],
+        outputs: ['argila_bruta'],
+        productionRate: 2,
+        workersMin: 1,
+        workersMax: 3,
+        inputRatios: {},
+        description: 'Extração de argila. Base para a Era da Alvenaria.',
+    },
+    'olaria_manual': {
+        name: 'Olaria Manual',
+        category: 'primario',
+        cost: 180,
+        era: 0,
+        inputs: ['argila_bruta', 'madeira_bruta'],
+        outputs: ['tijolo_barro'],
+        productionRate: 1.5,
+        workersMin: 1,
+        workersMax: 3,
+        inputRatios: { argila_bruta: 0.8, madeira_bruta: 0.3 },
+        description: 'Queima argila com lenha para produzir tijolos. Necessário para superar 50 moradores.',
+    },
+
+        'filtro_mecanico': {
         name: 'Filtro de Areia Mecânico',
         category: 'agua',
         cost: 250,
@@ -116,7 +143,21 @@ window.machineTypes = {
         description: 'Tratamento rudimentar via decantação e areia. Não utiliza eletricidade.'
     },
 
-    // ═══ ERA 1 ═══
+    'misturador_argamassa': {
+        name: 'Misturador de Argamassa',
+        category: 'primario',
+        cost: 400,
+        era: 1,
+        inputs: ['cal', 'agua_tratada', 'minerio_frag'],
+        outputs: ['argamassa'],
+        productionRate: 1.2,
+        workersMin: 1,
+        workersMax: 2,
+        inputRatios: { cal: 0.3, agua_tratada: 0.2, minerio_frag: 0.4 },
+        description: 'Produz argamassa para estruturas monumentais. Requer Cal (Forno de Cal) e agua tratada.',
+    },
+
+        // ═══ ERA 1 ═══
     'usina_termoeletrica': {
         name: 'Usina Termelétrica',
         category: 'energia',
@@ -659,13 +700,16 @@ window.FLOW_RESOURCES = new Set([
 
 // ═══ constructionCost — Custo de construção unificado ════════════════════════
 const _constructionOverrides = {
-    // ── Extratoras Era 0: SÓ gold (são a fonte dos recursos — não podem exigir recursos) ──
+    // ── Extratoras Era 0: SÓ gold ──
+    poco_argila:           { gold: 120 },         // extrator de argila
     lenhador:              { gold: 100 },
     mina_carvao_basica:    { gold: 600 },
     captacao_agua_manual:  { gold: 150 },
     mineradora_basica:     { gold: 600 },
     // ── Processadoras Era 0: gold + tábuas (já tem acesso via lenhador + serraria) ──
     serraria_manual:       { gold: 200 },  // produz tábuas — não pode exigi-las
+    olaria_manual:         { gold: 180 },         // produz tijolos — não pode exigi-los
+    misturador_argamassa:  { gold: 400, tijolo_barro: 10 },
     caldeira_carvao:       { gold: 300,  tabua_madeira: 15 },
     maquina_vapor:         { gold: 500,  tabua_madeira: 20 },
     britador_mecanico:     { gold: 800,  tabua_madeira: 15 },

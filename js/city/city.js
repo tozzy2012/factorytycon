@@ -152,8 +152,21 @@ function updateCity(dtSeconds) {
         if (def && def.happinessBonus) buildingBonus += def.happinessBonus;
     });
 
+    // Brick buildings reduce pollution sensitivity
+    let brickRatio = 0;
+    const housingBuildings = city.buildings.filter(b => cityBuildings[b.type]?.capacity > 0);
+    if (housingBuildings.length > 0) {
+        const brickHousing = housingBuildings.filter(b => cityBuildings[b.type]?.brickBuilding).length;
+        brickRatio = brickHousing / housingBuildings.length;
+    }
+    const pollutionResist = (typeof BALANCE !== 'undefined' && BALANCE.URBAN)
+        ? BALANCE.URBAN.BRICK_POLLUTION_RESIST : 0.5;
+    // Effective pollution: full for wood, reduced for proportion of brick
+    const effectivePollution = (gameState.pollutionLevel || 0) * (1 - brickRatio * pollutionResist);
+    const pollutionHappinessPenalty = effectivePollution * 0.1; // continuous per-tick penalty
+
     city.felicidade = Math.max(0, Math.min(100,
-        foodSurplus * 40 + housingSurplus * 25 + carneBonus + buildingBonus + 15 - starvationPenalty - taxPenalty
+        foodSurplus * 40 + housingSurplus * 25 + carneBonus + buildingBonus + 15 - starvationPenalty - taxPenalty - pollutionHappinessPenalty
     ));
 
     // ── Storage bonus from buildings ──
@@ -163,6 +176,26 @@ function updateCity(dtSeconds) {
         if (def && def.storageBonus) totalStorage += def.storageBonus;
     });
     city.comidaStorage = totalStorage;
+
+    // ── Wood Era cap status ──
+    const woodCap = (typeof BALANCE !== 'undefined' && BALANCE.URBAN) ? BALANCE.URBAN.WOOD_ERA_POP_CAP : 50;
+    city.woodEraCap = city.moradores >= woodCap;
+
+    // ── Next upgrade hint: find affordable building blocked only by materials ──
+    city.nextUpgradeHint = null;
+    if (city.woodEraCap) {
+        // Check if brick housing is available
+        const brickHouse = cityBuildings['casa_alvenaria'];
+        if (brickHouse) {
+            const cost = brickHouse.constructionCost || {};
+            const missingMats = Object.entries(cost)
+                .filter(([r, q]) => r !== 'gold' && (gameState.globalInventory[r] || 0) < q)
+                .map(([r]) => (typeof getResourceName === 'function' ? getResourceName(r) : r));
+            city.nextUpgradeHint = missingMats.length > 0
+                ? '⚠️ Falta: ' + missingMats.join(', ') + ' para Casa de Alvenaria'
+                : '🧱 Construa Casa de Alvenaria para expandir!';
+        }
+    }
 
     // ── Migration system (game-design: visible growth) ──
     city.migrationCooldown = Math.max(0, (city.migrationCooldown || 0) - dtSeconds);
@@ -290,6 +323,15 @@ function buildCityBuilding(type) {
         showCityNotification('⚠️ Apenas um por cidade');
         if (window.AudioEngine) AudioEngine.play('error');
         return false;
+    }
+    // Wood era cap: casas de madeira bloqueadas após 50 moradores
+    if (def.woodEra) {
+        const woodCap = (typeof BALANCE !== 'undefined' && BALANCE.URBAN) ? BALANCE.URBAN.WOOD_ERA_POP_CAP : 50;
+        if (gameState.city.moradores >= woodCap) {
+            showCityNotification('🧱 Limite da Era da Madeira! Construa Casas de Alvenaria (requer Tijolos).');
+            if (window.AudioEngine) AudioEngine.play('error');
+            return false;
+        }
     }
     // Custo unificado: gold + recursos do globalInventory
     const cost = def.constructionCost || def.buildCost || {};

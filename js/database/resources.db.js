@@ -47,7 +47,10 @@ function getResourceName(resource) {
         'madeira_bruta': 'Madeira Bruta',
         'tabua_madeira': 'Tábua de Madeira',
         'escudo_madeira': 'Escudo de Madeira',
-        'flechas_primitivas': 'Flechas Primitivas'
+        'flechas_primitivas': 'Flechas Primitivas',
+        'argila_bruta':  'Argila Bruta',
+        'tijolo_barro':  'Tijolo de Barro',
+        'argamassa':     'Argamassa'
     };
     return names[resource] || resource;
 }
@@ -101,7 +104,10 @@ function getResourceColor(resource) {
         'madeira_bruta': '#5d4037',
         'tabua_madeira': '#a1887f',
         'escudo_madeira': '#8d6e63',
-        'flechas_primitivas': '#795548'
+        'flechas_primitivas': '#795548',
+        'argila_bruta': '#c68642',
+        'tijolo_barro': '#c1440e',
+        'argamassa':    '#b8a090'
     };
     return colors[resource] || '#666';
 }
@@ -236,7 +242,10 @@ window.RESOURCE_CATEGORY = {
     componente_eletronico: 'final',
     minerio_titanio: 'minerio',
     esponja_titanio: 'secundario',
-    liga_titanio: 'final'
+    liga_titanio: 'final',
+    argila_bruta: 'minerio',
+    tijolo_barro: 'primario',
+    argamassa:    'primario'
 };
 
 window.PRODUCTION_CATEGORIES = {

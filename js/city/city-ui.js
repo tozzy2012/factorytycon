@@ -44,6 +44,12 @@ function renderCityWorkspace() {
     const laborWarn = document.getElementById('city-labor-warn');
     if (laborWarn) laborWarn.classList.toggle('visible', !!gameState.laborShortage);
 
+    // Wood era cap warning
+    const woodWarn = document.getElementById('city-wood-warn');
+    const woodHint = document.getElementById('city-wood-hint');
+    if (woodWarn) woodWarn.classList.toggle('visible', !!(city.woodEraCap));
+    if (woodHint && city.nextUpgradeHint) woodHint.textContent = city.nextUpgradeHint;
+
     // Tax label
     const taxLbl = document.getElementById('city-tax-val');
     if (taxLbl) taxLbl.textContent = (city.policies?.taxRate || 0) + '%';
@@ -119,6 +125,9 @@ function _renderCityGrid() {
 
         let badge = '';
         if (def.output) badge = `<div class="city-bcard-badge">+${def.outputRate}/h</div>`;
+        const woodCap = (typeof BALANCE !== 'undefined' && BALANCE.URBAN) ? BALANCE.URBAN.WOOD_ERA_POP_CAP : 50;
+        const woodBlocked = def.woodEra && gameState.city && gameState.city.moradores >= woodCap;
+        if (woodBlocked) badge += '<div class="city-bcard-badge" style="background:#8b5cf6;margin-top:2px;">🚫 Era Madeira</div>';
 
         card.innerHTML = `
             ${!def.unique ? `<button class="city-bcard-demolish" onclick="demolishCityBuilding('${b.id}')" title="Demolir">✕</button>` : ''}
@@ -263,6 +272,9 @@ function initCityWorkspaceUI() {
                 </div>
                 <div class="city-starvation-warning" id="city-labor-warn" style="background:rgba(251,146,60,0.12);border-color:#fb923c;">
                     👷 <strong>Gargalo Humano!</strong> Fábricas operando abaixo da capacidade por falta de moradores.
+                </div>
+                <div class="city-starvation-warning" id="city-wood-warn" style="background:rgba(139,92,246,0.12);border-color:#8b5cf6;">
+                    🧱 <strong>Limite da Era da Madeira (50 moradores)!</strong> Casas simples não podem ser construídas. <span id="city-wood-hint"></span>
                 </div>
 
                 <div>
