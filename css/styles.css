@@ -3739,3 +3739,27 @@ body { background: #0B0F19; }
 /* ── Top bar dividers ── */
 .top-bar-left  { border-right-color: rgba(255,255,255,0.07); }
 .top-bar-right { border-left-color:  rgba(255,255,255,0.07); }
+
+/* ═══ Info panel layout fix: machine header + stats grid edge-to-edge ═══ */
+.info-panel-body > .info-panel-machine-header {
+    margin: -16px -24px 0;
+    border-radius: 0;
+}
+.info-panel-body > .info-stats-grid {
+    margin: 0 -24px 16px;
+}
+/* First info-section after stats grid gets top breathing room */
+.info-stats-grid + .info-section {
+    margin-top: 4px;
+}
+/* Info stat cell: better font weight contrast */
+.info-stat-cell-value {
+    font-size: 14px;
+    font-weight: 700;
+}
+/* Machine name fits even long names */
+.info-panel-machine-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
