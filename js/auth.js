@@ -4,6 +4,16 @@
 window.AuthUI = (() => {
   let _modal = null;
 
+  // ── Segurança: escapa HTML antes de injetar em innerHTML ───────────────
+  function _escHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
   // ── Bootstrap ──────────────────────────────────────────────────────────
   function init() {
     _injectModal();
@@ -166,7 +176,7 @@ window.AuthUI = (() => {
       return `
         <div class="save-slot" style="display:flex;align-items:center;gap:8px;padding:10px;border:1px solid var(--border-primary);border-radius:8px;margin-bottom:6px;">
           <div style="flex:1;">
-            <div style="font-size:12px;font-weight:600;">Slot ${slot}: ${s ? (s.name || 'Partida') : '— Vazio —'}</div>
+            <div style="font-size:12px;font-weight:600;">Slot ${slot}: ${s ? _escHtml(s.name || 'Partida') : '— Vazio —'}</div>
             ${s ? `<div style="font-size:10px;color:var(--text-secondary);">Era ${s.era} · 💰${(s.gold||0).toLocaleString('pt-BR')} · ${_formatTime(s.playTime||0)}</div>` : ''}
           </div>
           <button onclick="AuthUI.saveToSlot(${slot})" class="top-btn" style="font-size:11px;" title="Salvar aqui">💾</button>

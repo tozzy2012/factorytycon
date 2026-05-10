@@ -6,7 +6,8 @@ export class LeaderboardController {
   constructor(private service: LeaderboardService) {}
 
   async getTop(req: Request, res: Response): Promise<void> {
-    const limit = Math.min(parseInt((req.query.limit as string) || '100', 10), 200);
+    const raw = parseInt((req.query.limit as string) || '100', 10);
+    const limit = Number.isFinite(raw) && raw > 0 ? Math.min(raw, 200) : 100;
     const entries = await this.service.getTop(limit);
     res.json({ ok: true, data: entries } satisfies ApiResponse);
   }

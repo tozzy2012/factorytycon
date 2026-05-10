@@ -46,10 +46,19 @@ export class SavesService {
       throw new AppError(400, 'Estado de jogo inválido (JSON malformado).');
     }
 
-    const gold = typeof state.gold === 'number' ? state.gold : 0;
-    const era = typeof state.era === 'number' ? state.era : 0;
-    const playTime = state.stats?.playTime ?? 0;
-    const machinesCount = Array.isArray(state.machines) ? state.machines.length : 0;
+    // Validação de bounds: impede que clientes enviem valores arbitrários para o leaderboard
+    const rawGold = typeof state.gold === 'number' ? state.gold : 0;
+    const gold = Number.isFinite(rawGold) ? Math.max(0, Math.min(rawGold, 1_000_000_000)) : 0;
+
+    const rawEra = typeof state.era === 'number' ? state.era : 0;
+    const era = Number.isInteger(rawEra) ? Math.max(0, Math.min(rawEra, 20)) : 0;
+
+    const rawPlayTime = typeof state.stats?.playTime === 'number' ? state.stats.playTime : 0;
+    const playTime = Number.isFinite(rawPlayTime) ? Math.max(0, rawPlayTime) : 0;
+
+    const machinesCount = Array.isArray(state.machines)
+      ? Math.min(state.machines.length, 10_000)
+      : 0;
 
     const saved = await this.savesRepo.upsert({
       userId,
