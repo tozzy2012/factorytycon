@@ -1251,6 +1251,58 @@ function showMessage(text, type = 'success') {
     setTimeout(() => { if (msg.parentNode) msg.remove(); }, 3000);
 }
 
+
+// ═══ macOS Dock Magnification (GSAP) ═══════════════════
+function initDockMagnification() {
+    const dock = document.getElementById('dockChips');
+    if (!dock || typeof gsap === 'undefined') return;
+    // Remove previous listeners by cloning
+    const fresh = dock.cloneNode(true);
+    dock.parentNode.replaceChild(fresh, dock);
+
+    // Re-attach drag listeners to cloned chips
+    const newDock = document.getElementById('dockChips');
+    newDock.querySelectorAll('.dock-chip').forEach(chip => {
+        const type = chip.dataset.machineType;
+        if (!type) return;
+        chip.addEventListener('dragstart', (e) => {
+            e.dataTransfer.effectAllowed = 'copy';
+            e.dataTransfer.setData('machineType', type);
+        });
+        chip.addEventListener('click', () => {
+            const existing = document.querySelector('.machine-chip.build-selected');
+            if (existing) existing.classList.remove('build-selected');
+            chip.classList.toggle('build-selected');
+            uiRuntime.buildMode = chip.classList.contains('build-selected') ? type : null;
+        });
+    });
+
+    newDock.addEventListener('mousemove', function(e) {
+        const chips = Array.from(newDock.querySelectorAll('.dock-chip:not(.era-locked)'));
+        if (!chips.length) return;
+        chips.forEach(chip => {
+            const rect = chip.getBoundingClientRect();
+            const cx = rect.left + rect.width / 2;
+            const dist = Math.abs(e.clientX - cx);
+            const maxDist = 110;
+            if (dist < maxDist) {
+                const t = 1 - dist / maxDist;
+                const scale = 1 + 0.6 * t * t;
+                const y = -26 * t * t;
+                gsap.to(chip, { scale, y, duration: 0.15, ease: 'power2.out', overwrite: true });
+            } else {
+                gsap.to(chip, { scale: 1, y: 0, duration: 0.2, ease: 'power2.out', overwrite: true });
+            }
+        });
+    });
+
+    newDock.addEventListener('mouseleave', function() {
+        newDock.querySelectorAll('.dock-chip').forEach(chip => {
+            gsap.to(chip, { scale: 1, y: 0, duration: 0.45, ease: 'elastic.out(1, 0.4)', overwrite: true });
+        });
+    });
+}
+
 function updateGoldDisplay() {
     const el = document.getElementById('goldTopDisplay');
     if (!el) return;
@@ -1471,13 +1523,15 @@ function populateDock(ws) {
             chip.draggable = true;
             chip.dataset.machineType = type;
             const iconHtml = getMachineIcon(type);
+            const tipContent = def.description ? `${def.description} · Custo: 💰${def.cost.toLocaleString('pt-BR')}` : `Custo: 💰${def.cost.toLocaleString('pt-BR')}`;
+            chip.setAttribute('data-tippy-content', tipContent);
             chip.innerHTML = `
-                <span class="dock-chip-icon" style="width:20px;height:20px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${iconHtml || `<span style="font-size:10px;font-weight:700;">${type.slice(0, 2).toUpperCase()}</span>`}</span>
+                <span class="dock-chip-icon" style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${iconHtml || `<span style="font-size:13px;font-weight:700;">${type.slice(0, 2).toUpperCase()}</span>`}</span>
                 <span class="dock-chip-name">${def.name}</span>
                 <span class="dock-chip-cost">💰${def.cost.toLocaleString('pt-BR')}</span>
             `;
-            chip.querySelector('.dock-chip-icon svg')?.setAttribute('width', '20');
-            chip.querySelector('.dock-chip-icon svg')?.setAttribute('height', '20');
+            chip.querySelector('.dock-chip-icon svg')?.setAttribute('width', '28');
+            chip.querySelector('.dock-chip-icon svg')?.setAttribute('height', '28');
             chip.addEventListener('dragstart', (e) => {
                 e.dataTransfer.effectAllowed = 'copy';
                 e.dataTransfer.setData('machineType', type);
@@ -1491,6 +1545,8 @@ function populateDock(ws) {
         placeholder.textContent = 'Nenhuma estrutura disponível nesta era.';
         container.appendChild(placeholder);
     }
+    // macOS dock magnification + tooltips
+    requestAnimationFrame(() => { initDockMagnification(); initTooltips(); });
 }
 
 function toggleDock() {

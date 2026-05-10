@@ -700,6 +700,32 @@ function getConnectionFlowRatio(connection) {
     return connection.capacity > 0 ? Math.min(1, flow / connection.capacity) : 0;
 }
 
+
+// ── Neon glow class based on resource color (RGB hue analysis) ──
+function _getNeonClass(color) {
+    if (!color || color.length < 4) return 'neon-gray-c';
+    const hex = color.replace('#', '');
+    const full = hex.length === 3
+        ? hex.split('').map(c => c + c).join('')
+        : hex.padEnd(6, '0');
+    const r = parseInt(full.slice(0,2),16);
+    const g = parseInt(full.slice(2,4),16);
+    const b = parseInt(full.slice(4,6),16);
+    const max = Math.max(r,g,b), min = Math.min(r,g,b);
+    if (max === 0) return 'neon-gray-c';
+    // Dominant channel
+    if (r > g && r > b && r > 120) {
+        if (g > 80) return 'neon-gold-c';  // orange-yellow (R+G high)
+        return 'neon-orange-c';            // red-dominant
+    }
+    if (g > r && g > b && g > 100) return 'neon-green-c';
+    if (b > r && b > g && b > 80)  return 'neon-blue-c';
+    if (r > 120 && g > 120 && b < 80) return 'neon-gold-c';  // yellow
+    if (r > 100 && b > 100 && g < 80) return 'neon-purple-c';
+    if (b > 120 && g > 120 && r < 80) return 'neon-blue-c';  // cyan
+    return 'neon-gray-c';
+}
+
 function updateConnectionVisual(connection) {
     const path = document.getElementById(connection.id);
     if (!path) return;
@@ -727,6 +753,17 @@ function updateConnectionVisual(connection) {
             ? ((fromMachine.resourceFilters || [])[0] || connection.resource)
             : connection.resource;
         path.style.stroke = getResourceColor(displayResource);
+        // Neon glow: assign per-resource CSS class
+        const neonClasses = ['neon-gold-c','neon-blue-c','neon-green-c','neon-orange-c','neon-purple-c','neon-gray-c','neon-flowing'];
+        neonClasses.forEach(cls => path.classList.remove(cls));
+        if (ratio > 0.05) {
+            const neonCls = _getNeonClass(getResourceColor(displayResource));
+            path.classList.add(neonCls);
+        }
+    } else {
+        // Remove all neon classes when no flow
+        ['neon-gold-c','neon-blue-c','neon-green-c','neon-orange-c','neon-purple-c','neon-gray-c','neon-flowing']
+            .forEach(cls => path.classList.remove(cls));
     }
     // Animated flow: active connections get flowing dash
     path.classList.toggle('flowing', ratio > 0.1 && !path.classList.contains('flow-critical'));

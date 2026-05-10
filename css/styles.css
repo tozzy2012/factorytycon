@@ -3519,3 +3519,223 @@
 .info-stat-cell-value.good { color: #4ade80; }
 .info-stat-cell-value.warn { color: #f59e0b; }
 .info-stat-cell-value.bad  { color: #f87171; }
+
+/* ═══════════════════════════════════════════════════════
+   REDESIGN v21 — Dark Industrial Premium
+   Space Grotesk · Glassmorphism · Neon · macOS Dock
+═══════════════════════════════════════════════════════ */
+
+/* ── Base: darker, richer background ── */
+body { background: #0B0F19; }
+.app-shell { background: #0B0F19; }
+
+/* ── Space Grotesk for all numbers / stats ── */
+.hud-stat-value,
+#goldTopDisplay,
+.machine-metric-value,
+.info-stat-cell-value,
+.node-meter-group,
+.chip-cost,
+.dock-chip-cost,
+.gold-amount,
+.city-stat-chip-value,
+.top-btn-gold,
+.sim-status { font-family: 'Space Grotesk', 'Inter', sans-serif; }
+
+/* ── Top bar: floating pill ── */
+.top-bar {
+    margin: 8px 14px 0;
+    border-radius: 22px;
+    border: 1px solid rgba(255,255,255,0.10);
+    border-bottom: 1px solid rgba(255,255,255,0.10);
+    background: rgba(11,15,25,0.84);
+    backdrop-filter: blur(32px);
+    -webkit-backdrop-filter: blur(32px);
+    box-shadow:
+        0 8px 32px rgba(0,0,0,0.5),
+        0 1px 0 rgba(255,255,255,0.06) inset,
+        0 -1px 0 rgba(0,0,0,0.3) inset;
+    height: auto;
+    min-height: 54px;
+    overflow: visible;
+}
+
+/* ── News ticker: softer ── */
+.news-ticker {
+    background: rgba(255,255,255,0.015) !important;
+    border-bottom-color: rgba(255,255,255,0.04) !important;
+}
+
+/* ── Bottom dock: floating pill ── */
+.bottom-dock {
+    margin: 0 14px 10px;
+    border-radius: 22px;
+    border: 1px solid rgba(255,255,255,0.10);
+    background: rgba(11,15,25,0.80);
+    backdrop-filter: blur(32px);
+    -webkit-backdrop-filter: blur(32px);
+    box-shadow:
+        0 -4px 24px rgba(0,0,0,0.4),
+        0 1px 0 rgba(255,255,255,0.06) inset;
+    border-top: 1px solid rgba(255,255,255,0.10);
+    height: 76px;
+    padding: 0 18px;
+}
+.dock-toggle { top: -16px; background: rgba(11,15,25,0.9); border-radius: 8px 8px 0 0; border-color: rgba(255,255,255,0.1); }
+
+/* ── Dock chips: vertical macOS style ── */
+.dock-chip {
+    flex-direction: column;
+    gap: 3px;
+    min-width: 64px;
+    height: 60px;
+    padding: 8px 10px;
+    border-radius: 14px;
+    border-color: rgba(255,255,255,0.07);
+    background: rgba(255,255,255,0.04);
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    will-change: transform;
+    transform-origin: bottom center;
+}
+.dock-chip:hover { transform: none; box-shadow: none; } /* GSAP handles this */
+.dock-chip .dock-chip-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0;
+    line-height: 1;
+    width: 28px !important;
+    height: 28px !important;
+}
+.dock-chip .dock-chip-icon svg { width: 28px !important; height: 28px !important; }
+.dock-chip .dock-chip-name {
+    font-size: 9px;
+    letter-spacing: 0.03em;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    max-width: 56px;
+    text-overflow: ellipsis;
+}
+.dock-chip .dock-chip-cost {
+    font-size: 9px;
+    font-weight: 600;
+    color: var(--accent-gold);
+}
+
+/* ── Inventory dock ── */
+.inventory-dock {
+    background: rgba(11,15,25,0.55);
+    border-top-color: rgba(52,211,153,0.1);
+}
+
+/* ── Canvas: Blueprint grid ── */
+.canvas-world {
+    background-color: #090d17;
+    background-image:
+        linear-gradient(rgba(96,165,250,0.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(96,165,250,0.08) 1px, transparent 1px),
+        linear-gradient(rgba(96,165,250,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(96,165,250,0.025) 1px, transparent 1px),
+        radial-gradient(circle, rgba(96,165,250,0.08) 1px, transparent 1px);
+    background-size: 320px 320px, 320px 320px, 80px 80px, 80px 80px, 20px 20px;
+}
+.workspace-industry .canvas-container { background-color: #090d17; }
+
+/* ── Machine nodes: deeper glass ── */
+.machine-node {
+    background: rgba(9,13,23,0.90);
+    border-color: rgba(255,255,255,0.08);
+    box-shadow:
+        0 4px 24px rgba(0,0,0,0.6),
+        0 1px 0 rgba(255,255,255,0.04) inset;
+}
+.machine-node:hover {
+    background: rgba(12,18,34,0.93);
+    border-color: rgba(255,255,255,0.18);
+    box-shadow:
+        0 12px 48px rgba(0,0,0,0.65),
+        0 0 32px rgba(96,165,250,0.12),
+        0 1px 0 rgba(255,255,255,0.07) inset;
+    transform: translateY(-2px);
+}
+.machine-node.active  { border-color: rgba(52,211,153,0.4); }
+.machine-node.bottleneck { border-color: rgba(251,146,60,0.6); box-shadow: 0 0 0 1px rgba(251,146,60,0.3), 0 0 28px rgba(251,146,60,0.15); }
+
+/* ── Connection lines: neon glow via CSS classes (JS sets neon-* class) ── */
+.connection-line { transition: filter 0.3s ease; }
+.connection-line.neon-flowing { filter: drop-shadow(0 0 5px rgba(96,165,250,0.6)) drop-shadow(0 0 10px rgba(96,165,250,0.3)); }
+.connection-line.neon-gold-c  { filter: drop-shadow(0 0 6px rgba(240,180,41,0.7)) drop-shadow(0 0 14px rgba(240,180,41,0.3)); }
+.connection-line.neon-blue-c  { filter: drop-shadow(0 0 6px rgba(56,189,248,0.7)) drop-shadow(0 0 14px rgba(56,189,248,0.3)); }
+.connection-line.neon-green-c { filter: drop-shadow(0 0 6px rgba(52,211,153,0.7)) drop-shadow(0 0 14px rgba(52,211,153,0.3)); }
+.connection-line.neon-orange-c{ filter: drop-shadow(0 0 6px rgba(251,146,60,0.7)) drop-shadow(0 0 14px rgba(251,146,60,0.3)); }
+.connection-line.neon-purple-c{ filter: drop-shadow(0 0 6px rgba(167,139,250,0.7)) drop-shadow(0 0 14px rgba(167,139,250,0.3)); }
+.connection-line.neon-gray-c  { filter: drop-shadow(0 0 4px rgba(148,163,184,0.5)); }
+
+/* ── Flow particles: brighter glowing dots ── */
+.particle {
+    filter: drop-shadow(0 0 6px white) drop-shadow(0 0 10px rgba(96,165,250,0.9));
+}
+
+/* ── Info panel: glass ── */
+.info-panel {
+    background: rgba(9,13,23,0.90);
+    backdrop-filter: blur(36px);
+    -webkit-backdrop-filter: blur(36px);
+    border-color: rgba(255,255,255,0.10);
+}
+.info-panel-header {
+    background: rgba(9,13,23,0.92);
+    border-bottom-color: rgba(255,255,255,0.07);
+}
+
+/* ── Sidebar: glass ── */
+.sidebar {
+    background: rgba(10,14,24,0.88);
+    backdrop-filter: blur(28px);
+    -webkit-backdrop-filter: blur(28px);
+    border-right-color: rgba(255,255,255,0.07);
+}
+
+/* ── HUD stat danger pulse ── */
+@keyframes dangerGlow {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(248,113,113,0); }
+    50%       { box-shadow: 0 0 14px 4px rgba(248,113,113,0.25); }
+}
+.hud-stat.hud-chip-danger { animation: dangerGlow 2s ease-in-out infinite; }
+
+/* ── Era fill: glow ── */
+.hud-era-fill { box-shadow: 0 0 6px rgba(52,211,153,0.5); }
+
+/* ── Status badges: text glow ── */
+.status-badge.active { text-shadow: 0 0 8px rgba(52,211,153,0.6); }
+.status-badge.bottleneck { text-shadow: 0 0 8px rgba(251,146,60,0.6); }
+
+/* ── Production panel glass ── */
+.production-panel {
+    background: rgba(9,13,23,0.92);
+    backdrop-filter: blur(28px);
+    border-color: rgba(255,255,255,0.10);
+}
+
+/* ── Speed buttons: premium feel ── */
+.speed-btn.active {
+    background: linear-gradient(135deg, #34d399, #059669);
+    box-shadow: 0 0 10px rgba(52,211,153,0.4);
+}
+
+/* ── HUD stat cards: refined ── */
+.hud-stat {
+    border-color: rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.03);
+}
+.hud-stat:hover {
+    background: rgba(255,255,255,0.07);
+    border-color: rgba(255,255,255,0.14);
+}
+
+/* ── Top bar dividers ── */
+.top-bar-left  { border-right-color: rgba(255,255,255,0.07); }
+.top-bar-right { border-left-color:  rgba(255,255,255,0.07); }
