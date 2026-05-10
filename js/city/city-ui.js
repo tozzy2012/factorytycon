@@ -44,6 +44,29 @@ function renderCityWorkspace() {
     const laborWarn = document.getElementById('city-labor-warn');
     if (laborWarn) laborWarn.classList.toggle('visible', !!gameState.laborShortage);
 
+    // Urbanization index
+    const urbanEl = document.getElementById('city-urban-idx');
+    const urbanBar = document.getElementById('city-urban-bar');
+    const urbanizedPop = city.urbanizedPop || 0;
+    const era3Threshold = (typeof BALANCE !== 'undefined' && BALANCE.URBAN)
+        ? BALANCE.URBAN.URBANIZATION_ERA3_THRESHOLD : 200;
+    if (urbanEl) urbanEl.textContent = urbanizedPop + '/' + era3Threshold + ' urbanizados';
+    if (urbanBar) urbanBar.style.width = Math.min(100, Math.round(urbanizedPop / era3Threshold * 100)) + '%';
+
+    // Civic building quality warning
+    const civicEl = document.getElementById('city-civic-quality');
+    const pollution = gameState.pollutionLevel || 0;
+    const civicThresh = (typeof BALANCE !== 'undefined' && BALANCE.URBAN) ? BALANCE.URBAN.CIVIC_POLLUTION_THRESHOLD : 30;
+    if (civicEl) {
+        if (pollution > civicThresh) {
+            const q = Math.max(0, 100 - Math.round((pollution - civicThresh) / (100 - civicThresh) * 100));
+            civicEl.textContent = '🏛️ Teatros/Praças em ' + q + '% eficiência (poluição alta)';
+            civicEl.style.display = 'block';
+        } else {
+            civicEl.style.display = 'none';
+        }
+    }
+
     // Wood era cap warning
     const woodWarn = document.getElementById('city-wood-warn');
     const woodHint = document.getElementById('city-wood-hint');
@@ -129,12 +152,25 @@ function _renderCityGrid() {
         const woodBlocked = def.woodEra && gameState.city && gameState.city.moradores >= woodCap;
         if (woodBlocked) badge += '<div class="city-bcard-badge" style="background:#8b5cf6;margin-top:2px;">🚫 Era Madeira</div>';
 
+        // Upgrade button: casa_alvenaria → insulae
+        let upgradeBtn = '';
+        if (b.type === 'casa_alvenaria') {
+            const insD = cityBuildings['insulae']?.constructionCost || {};
+            const canUpgrade = Object.entries(insD).every(([r, q]) =>
+                r === 'gold' ? gameState.gold >= (insD.gold || 0) * 0.6
+                             : (gameState.globalInventory[r] || 0) >= q
+            );
+            upgradeBtn = `<button class="city-bcard-upgrade${canUpgrade ? '' : ' city-bcard-upgrade-locked'}"
+                onclick="upgradeCityBuilding('${b.id}')" title="Upgrade para Insulae">⬆ Insulae</button>`;
+        }
+
         card.innerHTML = `
             ${!def.unique ? `<button class="city-bcard-demolish" onclick="demolishCityBuilding('${b.id}')" title="Demolir">✕</button>` : ''}
             ${badge}
             <div class="city-bcard-icon">${def.icon}</div>
             <div class="city-bcard-name">${def.name}</div>
-            <div class="city-bcard-detail">${detail}</div>`;
+            <div class="city-bcard-detail">${detail}</div>
+            ${upgradeBtn}`;
         grid.appendChild(card);
     });
 
@@ -286,6 +322,13 @@ function initCityWorkspaceUI() {
                     <div class="city-section-label">Migração</div>
                     <div id="city-mig-diag" class="city-mig-diag"></div>
                     <div class="city-migration-log" id="city-migration-log"></div>
+                </div>
+
+                <div>
+                    <div class="city-section-label">Urbanização (Era 3)</div>
+                    <div style="font-size:12px;color:var(--text-secondary);margin-bottom:4px;" id="city-urban-idx">0/200 urbanizados</div>
+                    <div class="meter"><div class="meter-fill good" id="city-urban-bar" style="width:0%"></div></div>
+                    <div style="font-size:11px;color:#f59e0b;margin-top:6px;display:none" id="city-civic-quality"></div>
                 </div>
 
                 <div>

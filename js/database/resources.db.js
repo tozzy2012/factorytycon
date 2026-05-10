@@ -50,7 +50,11 @@ function getResourceName(resource) {
         'flechas_primitivas': 'Flechas Primitivas',
         'argila_bruta':  'Argila Bruta',
         'tijolo_barro':  'Tijolo de Barro',
-        'argamassa':     'Argamassa'
+        'argamassa':     'Argamassa',
+        'blocos_pedra':  'Blocos de Pedra',
+        'pedra_polida':  'Pedra Polida',
+        'vigas_aco':     'Vigas de Aço',
+        'vidro':         'Vidro'
     };
     return names[resource] || resource;
 }
@@ -107,7 +111,11 @@ function getResourceColor(resource) {
         'flechas_primitivas': '#795548',
         'argila_bruta': '#c68642',
         'tijolo_barro': '#c1440e',
-        'argamassa':    '#b8a090'
+        'argamassa':    '#b8a090',
+        'blocos_pedra': '#9e9e8c',
+        'pedra_polida': '#e8dcc8',
+        'vigas_aco':    '#5b7a8a',
+        'vidro':        '#a8d8ea'
     };
     return colors[resource] || '#666';
 }
@@ -245,7 +253,11 @@ window.RESOURCE_CATEGORY = {
     liga_titanio: 'final',
     argila_bruta: 'minerio',
     tijolo_barro: 'primario',
-    argamassa:    'primario'
+    argamassa:    'primario',
+    blocos_pedra: 'primario',
+    pedra_polida: 'final',
+    vigas_aco:    'final',
+    vidro:        'final'
 };
 
 window.PRODUCTION_CATEGORIES = {

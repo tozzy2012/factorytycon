@@ -134,7 +134,9 @@ function updateCity(dtSeconds) {
         city.comida.carne = Math.max(0, (city.comida.carne || 0) - Math.max(0, consumption - fromGraos));
         city.starvationTimer = 0;
     } else {
-        city.starvationTimer += dtSeconds;
+        // Aqueduto extends survival during food shortage
+        const aquedutoFactor = hasAqueduto ? 0.5 : 1;
+        city.starvationTimer += dtSeconds * aquedutoFactor;
         city.comida.graos = Math.max(0, (city.comida.graos || 0) - consumption * 0.5);
     }
 
@@ -145,12 +147,23 @@ function updateCity(dtSeconds) {
     const taxPenalty = (city.policies?.taxRate || 0) * 1.5;
     const carneBonus = (city.comida.carne || 0) > 0 ? C.carneBonus : 0;
 
-    // Building bonuses (parks, schools, tavern etc)
+    // Building bonuses with civic zoning quality (Teatro/Praça reduced by pollution)
+    const B_urban = (typeof BALANCE !== 'undefined' && BALANCE.URBAN) ? BALANCE.URBAN : {};
+    const civicPollThreshold = B_urban.CIVIC_POLLUTION_THRESHOLD || 30;
+    const pollution = gameState.pollutionLevel || 0;
+    const civicQuality = pollution <= civicPollThreshold ? 1
+        : Math.max(0, 1 - (pollution - civicPollThreshold) / (100 - civicPollThreshold));
+
     let buildingBonus = 0;
     city.buildings.forEach(b => {
         const def = cityBuildings[b.type];
-        if (def && def.happinessBonus) buildingBonus += def.happinessBonus;
+        if (!def || !def.happinessBonus) return;
+        const bonus = def.civicBuilding ? def.happinessBonus * civicQuality : def.happinessBonus;
+        buildingBonus += bonus;
     });
+
+    // Aqueduto bonus: reduces starvation timer impact
+    const hasAqueduto = city.buildings.some(b => b.type === 'aqueduto');
 
     // Brick buildings reduce pollution sensitivity
     let brickRatio = 0;
@@ -176,6 +189,14 @@ function updateCity(dtSeconds) {
         if (def && def.storageBonus) totalStorage += def.storageBonus;
     });
     city.comidaStorage = totalStorage;
+
+    // ── Urbanization index: moradores in luxuryBuilding structures ──
+    let urbanizedCapacity = 0;
+    city.buildings.forEach(b => {
+        const def = cityBuildings[b.type];
+        if (def && def.luxuryBuilding && def.capacity > 0) urbanizedCapacity += def.capacity;
+    });
+    city.urbanizedPop = Math.min(Math.floor(city.moradores), urbanizedCapacity);
 
     // ── Wood Era cap status ──
     const woodCap = (typeof BALANCE !== 'undefined' && BALANCE.URBAN) ? BALANCE.URBAN.WOOD_ERA_POP_CAP : 50;
@@ -273,7 +294,12 @@ function updateCity(dtSeconds) {
     if (city.policies?.taxRate > 0) {
         let taxMulti = 1;
         city.buildings.forEach(b => { const d = cityBuildings[b.type]; if (d && d.taxBonus) taxMulti += d.taxBonus; });
-        const tax = (city.policies.taxRate / 100) * city.moradores * 0.1 * taxMulti * dtSeconds / 3600;
+        // Luxury tax: +25% per urbanized inhabitant
+        const luxBonus = (B_urban.LUXURY_TAX_BONUS || 0.25);
+        const luxMulti = city.urbanizedPop > 0
+            ? 1 + (city.urbanizedPop / Math.max(1, city.moradores)) * luxBonus
+            : 1;
+        const tax = (city.policies.taxRate / 100) * city.moradores * 0.1 * taxMulti * luxMulti * dtSeconds / 3600;
         gameState.gold += tax;
         city.stats.goldFromTax += tax;
     }
@@ -371,6 +397,39 @@ function demolishCityBuilding(id) {
     if (window.AudioEngine) AudioEngine.play('delete');
     saveGameState();
     renderCityWorkspace();
+}
+
+function upgradeCityBuilding(id) {
+    const idx = gameState.city.buildings.findIndex(b => b.id === id);
+    if (idx < 0 || gameState.city.buildings[idx].type !== 'casa_alvenaria') return;
+    const insD = cityBuildings['insulae'];
+    if (!insD) return;
+    const cost = insD.constructionCost || {};
+    const goldCost = Math.round((cost.gold || 0) * 0.6);
+    if (gameState.gold < goldCost) {
+        showCityNotification('Ouro insuficiente (' + goldCost + ' para upgrade)');
+        return;
+    }
+    for (const [res, qty] of Object.entries(cost)) {
+        if (res === 'gold') continue;
+        if ((gameState.globalInventory[res] || 0) < qty) {
+            const rn = typeof getResourceName === 'function' ? getResourceName(res) : res;
+            showCityNotification('Faltam ' + Math.ceil(qty - (gameState.globalInventory[res]||0)) + ' ' + rn);
+            return;
+        }
+    }
+    gameState.gold -= goldCost;
+    for (const [res, qty] of Object.entries(cost)) {
+        if (res === 'gold') continue;
+        gameState.globalInventory[res] = Math.max(0, (gameState.globalInventory[res] || 0) - qty);
+    }
+    updateGoldDisplay();
+    gameState.city.buildings[idx].type = 'insulae';
+    showCityNotification('✅ Evoluído para Insulae!');
+    if (window.AudioEngine) AudioEngine.play('house');
+    saveGameState();
+    renderCityWorkspace();
+    _renderBuildPanel();
 }
 
 function showCityNotification(msg) {

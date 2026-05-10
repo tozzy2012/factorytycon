@@ -157,6 +157,33 @@ window.machineTypes = {
         description: 'Produz argamassa para estruturas monumentais. Requer Cal (Forno de Cal) e agua tratada.',
     },
 
+        'extratora_areia': {
+        name: 'Extratora de Areia',
+        category: 'minerio',
+        cost: 300,
+        era: 1,
+        inputs: [],
+        outputs: ['areia_silica'],
+        productionRate: 3,
+        workersMin: 1,
+        workersMax: 3,
+        inputRatios: {},
+        description: 'Extração manual de areia de sílica. Usada para vidro.',
+    },
+    'canteiro_obras': {
+        name: 'Canteiro de Obras',
+        category: 'primario',
+        cost: 350,
+        era: 1,
+        inputs: ['calcario_bruto'],
+        outputs: ['blocos_pedra'],
+        productionRate: 1.5,
+        workersMin: 2,
+        workersMax: 4,
+        inputRatios: { calcario_bruto: 0.6 },
+        description: 'Corta e molda calcário em blocos de construção.',
+    },
+
         // ═══ ERA 1 ═══
     'usina_termoeletrica': {
         name: 'Usina Termelétrica',
@@ -507,7 +534,47 @@ window.machineTypes = {
         productionRate: 8,
         inputRatios: { sinter: 1.70, coque: 0.45, cal: 0.28, ar_comprimido: 1.20 }
     },
-    'flotacao': {
+    'oficina_cantaria': {
+        name: 'Oficina de Cantaria',
+        category: 'primario',
+        cost: 700,
+        era: 2,
+        inputs: ['blocos_pedra', 'agua_tratada'],
+        outputs: ['pedra_polida'],
+        productionRate: 0.8,
+        workersMin: 2,
+        workersMax: 3,
+        inputRatios: { blocos_pedra: 0.5, agua_tratada: 0.15 },
+        description: 'Lapida blocos de calcário em mármore polido.',
+    },
+    'laminador_perfis': {
+        name: 'Laminador de Perfis',
+        category: 'final',
+        cost: 1100,
+        era: 2,
+        inputs: ['aco_bruto', 'eletricidade'],
+        outputs: ['vigas_aco'],
+        productionRate: 1.0,
+        workersMin: 1,
+        workersMax: 2,
+        inputRatios: { aco_bruto: 0.9, eletricidade: 0.15 },
+        description: 'Laminação de perfis estruturais de aço. Necessário para apartamentos.',
+    },
+    'fabrica_vidro': {
+        name: 'Fábrica de Vidro',
+        category: 'final',
+        cost: 800,
+        era: 2,
+        inputs: ['areia_silica', 'eletricidade'],
+        outputs: ['vidro'],
+        productionRate: 2.0,
+        workersMin: 1,
+        workersMax: 2,
+        inputRatios: { areia_silica: 0.8, eletricidade: 0.12 },
+        description: 'Funde areia de sílica em vidro plano. Necessário para escolas.',
+    },
+
+        'flotacao': {
         name: 'Flotação',
         category: 'secundario',
         cost: 1000,
@@ -708,6 +775,11 @@ const _constructionOverrides = {
     mineradora_basica:     { gold: 600 },
     // ── Processadoras Era 0: gold + tábuas (já tem acesso via lenhador + serraria) ──
     serraria_manual:       { gold: 200 },  // produz tábuas — não pode exigi-las
+    extratora_areia:       { gold: 300 },         // extrator de areia
+    canteiro_obras:        { gold: 350, tabua_madeira: 20 },
+    oficina_cantaria:      { gold: 700, blocos_pedra: 5 },
+    laminador_perfis:      { gold: 1100, chapa_aco: 8 },
+    fabrica_vidro:         { gold: 800, tijolo_barro: 10 },
     olaria_manual:         { gold: 180 },         // produz tijolos — não pode exigi-los
     misturador_argamassa:  { gold: 400, tijolo_barro: 10 },
     caldeira_carvao:       { gold: 300,  tabua_madeira: 15 },

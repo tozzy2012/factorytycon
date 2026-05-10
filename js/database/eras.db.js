@@ -10,14 +10,14 @@ window.ERA_DEFINITIONS = [
         id: 1,
         name: 'Era Industrial',
         description: 'O carvão gera eletricidade. Uma revolução.',
-        unlocks: ['usina_termoeletrica', 'mineradora_fe', 'mineradora_cu', 'mina_carvao', 'captacao_agua', 'eta', 'britador', 'coqueria', 'forno_cal', 'forno_sinterizacao', 'compressor_ar'],
+        unlocks: ['usina_termoeletrica', 'mineradora_fe', 'mineradora_cu', 'mina_carvao', 'captacao_agua', 'eta', 'britador', 'coqueria', 'forno_cal', 'forno_sinterizacao', 'compressor_ar', 'extratora_areia', 'canteiro_obras'],
         requirement: { resource: 'minerio_frag', amount: 200 }
     },
     {
         id: 2,
         name: 'Era do Aço',
         description: 'Metalurgia avançada e petróleo.',
-        unlocks: ['alto_forno', 'aciaria', 'laminador', 'flotacao', 'forno_fundicao_cu', 'eletrólise', 'trefiladora', 'poco_petroleo', 'refinaria_combustivel', 'usina_oleo', 'mina_nitrato', 'planta_explosivos'],
+        unlocks: ['alto_forno', 'aciaria', 'laminador', 'flotacao', 'forno_fundicao_cu', 'eletrólise', 'trefiladora', 'poco_petroleo', 'refinaria_combustivel', 'usina_oleo', 'mina_nitrato', 'planta_explosivos', 'oficina_cantaria', 'laminador_perfis', 'fabrica_vidro'],
         requirement: { resource: 'ferro_gusa', amount: 200 }
     },
     {
@@ -25,7 +25,7 @@ window.ERA_DEFINITIONS = [
         name: 'Era Moderna',
         description: 'Solar, alumínio e eletrônica.',
         unlocks: ['usina_solar', 'mineradora_bauxita', 'refinaria_alumina', 'eletrolise_aluminio', 'laminadora_aluminio', 'mineradora_silica', 'purificacao_silicio', 'fabrica_chips'],
-        requirement: { resource: 'aco_bruto', amount: 100 }
+        requirement: { resource: 'aco_bruto', amount: 100, urbanizedPop: 200 }
     },
     {
         id: 4,
@@ -55,6 +55,15 @@ function checkEraProgression() {
 
     const eraProgressEl = document.getElementById('eraProgressDebug');
     if (eraProgressEl) eraProgressEl.textContent = `${resource}: ${Math.round(produced)}/${amount}`;
+
+    // Extra requirement: urbanizedPop threshold
+    if (nextEra.requirement.urbanizedPop) {
+        const urbanized = gameState.city?.urbanizedPop || 0;
+        const threshold = nextEra.requirement.urbanizedPop;
+        const urbanEl = document.getElementById('eraUrbanDebug');
+        if (urbanEl) urbanEl.textContent = `Urbanizados: ${urbanized}/${threshold}`;
+        if (urbanized < threshold) return;
+    }
 
     if (produced >= amount) {
         gameState.era = currentEra + 1;
