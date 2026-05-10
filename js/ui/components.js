@@ -366,6 +366,7 @@ function renderEfficiencyHistory(machine) {
 
 function showInfoPanel(machine) {
     const panel = document.getElementById('infoPanel');
+    const wasAlreadyOpen = panel.classList.contains('open');
     const title = document.getElementById('infoTitle');
     const content = document.getElementById('infoContent');
     const def = machineTypes[machine.type];
@@ -572,14 +573,16 @@ function showInfoPanel(machine) {
     `;
 
     panel.classList.add('open');
-    // GSAP slide-in if available
-    if (typeof gsap !== 'undefined') {
-        gsap.fromTo(panel,
-            { x: 60, opacity: 0 },
-            { x: 0, opacity: 1, duration: 0.35, ease: 'power3.out' }
-        );
+    // Only animate + re-init tooltips when freshly opening, not on tick updates
+    if (!wasAlreadyOpen) {
+        if (typeof gsap !== 'undefined') {
+            gsap.fromTo(panel,
+                { x: 60, opacity: 0 },
+                { x: 0, opacity: 1, duration: 0.35, ease: 'power3.out' }
+            );
+        }
+        setTimeout(initTooltips, 60);
     }
-    setTimeout(initTooltips, 50);
 
     // Worker events handled by document-level delegation (see init)
 }
