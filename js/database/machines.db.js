@@ -656,3 +656,28 @@ window.machineTypes = {
 window.FLOW_RESOURCES = new Set([
     'energia_mecanica', 'eletricidade', 'vapor', 'ar_comprimido'
 ]);
+
+// ═══ constructionCost — Custo de construção unificado ════════════════════════
+const _constructionOverrides = {
+    lenhador:              { gold: 100,  tabua_madeira: 5  },
+    serraria_manual:       { gold: 200,  tabua_madeira: 10 },
+    captacao_agua_manual:  { gold: 150,  tabua_madeira: 8  },
+    caldeira_carvao:       { gold: 300,  tabua_madeira: 15 },
+    maquina_vapor:         { gold: 500,  tabua_madeira: 20 },
+    mina_carvao_basica:    { gold: 600,  tabua_madeira: 10 },
+    britador_mecanico:     { gold: 800,  tabua_madeira: 15, madeira_bruta: 20 },
+    mineradora_basica:     { gold: 600,  tabua_madeira: 12 },
+    alto_forno:            { gold: 2000, tabua_madeira: 50, madeira_bruta: 100 },
+    aciaria:               { gold: 1800, tabua_madeira: 40 },
+    laminador:             { gold: 1200, tabua_madeira: 30 },
+    flotacao:              { gold: 1000, tabua_madeira: 20 },
+};
+(function _applyConstructionCosts() {
+    Object.entries(machineTypes).forEach(function(e) {
+        var key = e[0], def = e[1];
+        if (_constructionOverrides[key]) { def.constructionCost = _constructionOverrides[key]; return; }
+        var base = { gold: def.cost || 0 };
+        if ((def.workersMin || 0) > 0) base.tabua_madeira = def.workersMin * 5;
+        def.constructionCost = base;
+    });
+})();

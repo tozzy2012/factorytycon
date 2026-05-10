@@ -3119,3 +3119,11 @@
 }
 .city-mig-entry b { color: var(--text-primary); }
 .city-mig-time { color: var(--text-tertiary); font-size: 10px; margin-left: 4px; }
+
+/* ═══ Zoning warning na build card ═══ */
+.city-build-card-zone-warn {
+    font-size: 10px;
+    color: #fb923c;
+    margin-top: 3px;
+    font-weight: 600;
+}

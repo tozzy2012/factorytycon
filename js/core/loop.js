@@ -92,6 +92,7 @@ function onTick(tickNumber) {
     if (tickNumber % TICK.SIMULATION_EVERY_TICKS === 0) {
         if (gameState.city) updateCity(TICK.MS_PER_TICK / 1000 * SPEED_MULTIPLIER);
         gameState.stats.playTime = (gameState.stats.playTime || 0) + TICK.MS_PER_TICK / 1000;
+        _trackGameDay(TICK.MS_PER_TICK / 1000 * SPEED_MULTIPLIER);
         const start = performance.now();
         updateSimulation();
         const elapsed = performance.now() - start;
@@ -159,6 +160,44 @@ function updateIdleWorkers() {
     });
     el.textContent = idle > 0 ? idle + ' ociosos' : 'todos ativos';
     el.style.color = idle > 0 ? 'var(--accent-orange)' : 'var(--accent-green)';
+}
+
+// ═══ CICLO DO AMANHECER ═══════════════════════════════════════════════════════
+function _trackGameDay(dtRealSeconds) {
+    if (!gameState.gameTime) gameState.gameTime = { daysPassed: 0, secondsSinceDay: 0 };
+    const dayLen = (typeof BALANCE !== 'undefined') ? BALANCE.GAME_DAY_REAL_SECONDS : 120;
+    gameState.gameTime.secondsSinceDay += dtRealSeconds;
+    if (gameState.gameTime.secondsSinceDay >= dayLen) {
+        gameState.gameTime.secondsSinceDay -= dayLen;
+        gameState.gameTime.daysPassed = (gameState.gameTime.daysPassed || 0) + 1;
+        _onNewDay(gameState.gameTime.daysPassed);
+    }
+}
+
+function _onNewDay(dayNumber) {
+    if (!gameState.city) return;
+    const city = gameState.city;
+    const B = (typeof BALANCE !== 'undefined') ? BALANCE : {};
+
+    // 1. Poluição afeta felicidade (além do cálculo contínuo)
+    const pollutionPenalty = (gameState.pollutionLevel || 0) * ((B.POLLUTION || {}).HAPPINESS_PENALTY_PER_UNIT || 0.3);
+    city.felicidade = Math.max(0, Math.min(100, city.felicidade - pollutionPenalty));
+
+    // 2. Novos moradores chegam se atratividade permite
+    const minHappiness = ((B.NEW_DAY || {}).MIGRATION_MIN_HAPPINESS) || 40;
+    if (city.felicidade >= minHappiness && city.moradores < city.moradoresMax && gameState.pollutionLevel < ((B.POLLUTION || {}).MIGRATION_BLOCK_THRESHOLD || 70)) {
+        // A migração contínua já cuida do crescimento; aqui apenas logamos o dia
+    }
+
+    // 3. Bônus de ouro diário (se configurado)
+    const goldBonus = ((B.NEW_DAY || {}).GOLD_BONUS_BASE) || 0;
+    if (goldBonus > 0) {
+        gameState.gold += goldBonus;
+        updateGoldDisplay();
+    }
+
+    // 4. Dispara evento para outros módulos escutarem
+    document.dispatchEvent(new CustomEvent('game:newDay', { detail: { day: dayNumber, city: city } }));
 }
 
 function startGameLoop() {

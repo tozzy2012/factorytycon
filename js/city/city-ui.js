@@ -34,6 +34,16 @@ function renderCityWorkspace() {
     const warn = document.getElementById('city-starvation-warn');
     if (warn) warn.classList.toggle('visible', city.starvationTimer > 10);
 
+    // Pollution zoning warning
+    const pollThreshold = (typeof BALANCE !== 'undefined' && BALANCE.POLLUTION)
+        ? BALANCE.POLLUTION.RESIDENTIAL_WARNING_THRESHOLD : 30;
+    const pollWarn = document.getElementById('city-pollution-warn');
+    if (pollWarn) pollWarn.classList.toggle('visible', (gameState.pollutionLevel || 0) > pollThreshold);
+
+    // Labor shortage warning
+    const laborWarn = document.getElementById('city-labor-warn');
+    if (laborWarn) laborWarn.classList.toggle('visible', !!gameState.laborShortage);
+
     // Tax label
     const taxLbl = document.getElementById('city-tax-val');
     if (taxLbl) taxLbl.textContent = (city.policies?.taxRate || 0) + '%';
@@ -115,19 +125,29 @@ function _renderBuildPanel() {
         const btn = document.createElement('button');
         btn.className = 'city-build-card' + (locked ? ' locked' : '');
 
-        const costEntries = Object.entries(def.buildCost || {});
-        const costStr = costEntries.length
-            ? costEntries.map(([r, q]) => `${q} ${getResourceUnitBase(r)} ${getResourceName(r)}`).join(' · ')
-            : 'Grátis';
-        const isFree = costEntries.length === 0;
+        const cost = def.constructionCost || def.buildCost || {};
+        const goldCost = cost.gold || 0;
+        const resCosts = Object.entries(cost).filter(function(e){ return e[0] !== 'gold'; });
+        const isFree = goldCost === 0 && resCosts.length === 0;
 
-        btn.innerHTML = `
-            <div class="city-build-card-icon">${def.icon}</div>
-            <div class="city-build-card-info">
-                <div class="city-build-card-name">${def.name}</div>
-                <div class="city-build-card-desc">${def.description}</div>
-                <div class="city-build-card-cost ${isFree ? 'free' : ''}">🪵 ${locked ? '🔒 Era ' + def.era : costStr}</div>
-            </div>`;
+        let costParts = [];
+        if (goldCost > 0) costParts.push('💰 ' + goldCost);
+        resCosts.forEach(function(e){ costParts.push(e[1] + ' ' + (typeof getResourceName === 'function' ? getResourceName(e[0]) : e[0])); });
+        const costStr = costParts.length ? costParts.join(' · ') : 'Grátis';
+
+        // Zoning hint: warn if building is pollution-sensitive and pollution is high
+        const pollThreshold = (typeof BALANCE !== 'undefined' && BALANCE.POLLUTION) ? BALANCE.POLLUTION.RESIDENTIAL_WARNING_THRESHOLD : 30;
+        const zoningHint = (!locked && def.pollutionSensitive && (gameState.pollutionLevel || 0) > pollThreshold)
+            ? '<div class="city-build-card-zone-warn">⚠️ Poluição alta nesta região</div>' : '';
+
+        btn.innerHTML =
+            '<div class="city-build-card-icon">' + def.icon + '</div>' +
+            '<div class="city-build-card-info">' +
+                '<div class="city-build-card-name">' + def.name + '</div>' +
+                '<div class="city-build-card-desc">' + def.description + '</div>' +
+                '<div class="city-build-card-cost' + (isFree ? ' free' : '') + '">' + (locked ? '🔒 Era ' + def.era : costStr) + '</div>' +
+                zoningHint +
+            '</div>';
         if (!locked) btn.onclick = () => buildCityBuilding(type);
         list.appendChild(btn);
     });
@@ -212,6 +232,12 @@ function initCityWorkspaceUI() {
 
                 <div class="city-starvation-warning" id="city-starvation-warn">
                     ⚠️ <strong>Atenção:</strong> Moradores passando fome! Construa um Campo de Grãos.
+                </div>
+                <div class="city-starvation-warning" id="city-pollution-warn" style="background:rgba(251,146,60,0.12);border-color:#fb923c;">
+                    🏭 <strong>Poluição industrial elevada!</strong> Residências aqui terão -felicidade. Considere parques ou afastar indústrias pesadas.
+                </div>
+                <div class="city-starvation-warning" id="city-labor-warn" style="background:rgba(251,146,60,0.12);border-color:#fb923c;">
+                    👷 <strong>Gargalo Humano!</strong> Fábricas operando abaixo da capacidade por falta de moradores.
                 </div>
 
                 <div>

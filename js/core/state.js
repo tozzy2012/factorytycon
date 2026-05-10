@@ -26,6 +26,8 @@ window.gameState = {
     city: null,
     tutorial: { done: false, step: 0 },
     stats: { playTime: 0, firstSale: false },
+    gameTime: { daysPassed: 0, secondsSinceDay: 0 },
+    laborShortage: false,
     tickStats: {
         totalTicks: 0,
         simulationRuns: 0,

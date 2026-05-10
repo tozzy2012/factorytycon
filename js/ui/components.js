@@ -566,12 +566,27 @@ function clearHubFilters(machineId) {
 function createMachine(type, x, y) {
     const machineDef = machineTypes[type];
     if (!machineDef) return;
-    if (gameState.gold < machineDef.cost) {
+
+    // Custo unificado: verifica gold + recursos do globalInventory
+    const cost = machineDef.constructionCost || { gold: machineDef.cost || 0 };
+    const goldCost = cost.gold || 0;
+    if (gameState.gold < goldCost) {
         showMessage('Ouro insuficiente!', 'error');
         return;
     }
-
-    gameState.gold -= machineDef.cost;
+    for (const [res, qty] of Object.entries(cost)) {
+        if (res === 'gold') continue;
+        if ((gameState.globalInventory[res] || 0) < qty) {
+            const rname = typeof getResourceName === 'function' ? getResourceName(res) : res;
+            showMessage('Faltam ' + Math.ceil(qty - (gameState.globalInventory[res]||0)) + ' ' + rname, 'error');
+            return;
+        }
+    }
+    gameState.gold -= goldCost;
+    for (const [res, qty] of Object.entries(cost)) {
+        if (res === 'gold') continue;
+        gameState.globalInventory[res] = Math.max(0, (gameState.globalInventory[res] || 0) - qty);
+    }
     const machine = {
         id: gameState.nextId++,
         type,

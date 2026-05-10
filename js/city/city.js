@@ -69,6 +69,10 @@ function updateCity(dtSeconds) {
     city.trabalhadores.alocados = Math.min(totalNeeded, totalWorkers);
     city.trabalhadores.livres = Math.max(0, totalWorkers - totalNeeded);
 
+    // Gargalo Humano: marca flag global se há escassez de mão de obra
+    const workerCoverage = totalNeeded > 0 ? (totalWorkers / totalNeeded) : 1;
+    gameState.laborShortage = workerCoverage < ((typeof BALANCE !== 'undefined' && BALANCE.LABOR) ? BALANCE.LABOR.SHORTAGE_DISPLAY_THRESHOLD : 0.9);
+
     // If not enough workers, cap industry workers proportionally
     if (totalNeeded > totalWorkers && industryWorkersNeeded > 0) {
         const available = Math.max(0, totalWorkers - cityWorkersNeeded);
@@ -255,16 +259,29 @@ function buildCityBuilding(type) {
         if (window.AudioEngine) AudioEngine.play('error');
         return false;
     }
-    for (const [res, qty] of Object.entries(def.buildCost || {})) {
+    // Custo unificado: gold + recursos do globalInventory
+    const cost = def.constructionCost || def.buildCost || {};
+    const goldCost = cost.gold || 0;
+    if (gameState.gold < goldCost) {
+        showCityNotification('Ouro insuficiente (' + Math.ceil(goldCost) + ' necessario)');
+        if (window.AudioEngine) AudioEngine.play('error');
+        return false;
+    }
+    for (const [res, qty] of Object.entries(cost)) {
+        if (res === 'gold') continue;
         if ((gameState.globalInventory[res] || 0) < qty) {
-            showCityNotification(`❌ Faltam ${Math.ceil(qty - (gameState.globalInventory[res]||0))} ${getResourceName(res)}`);
+            const rname = typeof getResourceName === 'function' ? getResourceName(res) : res;
+            showCityNotification('Faltam ' + Math.ceil(qty - (gameState.globalInventory[res]||0)) + ' ' + rname);
             if (window.AudioEngine) AudioEngine.play('error');
             return false;
         }
     }
-    for (const [res, qty] of Object.entries(def.buildCost || {})) {
+    gameState.gold -= goldCost;
+    for (const [res, qty] of Object.entries(cost)) {
+        if (res === 'gold') continue;
         gameState.globalInventory[res] = Math.max(0, (gameState.globalInventory[res] || 0) - qty);
     }
+    updateGoldDisplay();
     gameState.city.buildings.push({ type, id: `city-${Date.now()}`, workers_assigned: 0 });
     if (window.AudioEngine) AudioEngine.play('house');
     saveGameState();
